@@ -4,8 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/Gergenus/commerce/user-service/internal/models"
-	dbpkg "github.com/Gergenus/commerce/user-service/pkg/db"
+	"github.com/Gergenus/commerce/product-service/internal/models"
+	dbpkg "github.com/Gergenus/commerce/product-service/pkg/db"
 )
 
 type PostgresRepository struct {

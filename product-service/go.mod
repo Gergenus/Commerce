@@ -1,4 +1,4 @@
-module github.com/Gergenus/commerce/user-service
+module github.com/Gergenus/commerce/product-service
 
 go 1.24.2
 

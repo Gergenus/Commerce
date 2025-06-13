@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/Gergenus/commerce/user-service/internal/models"
+	"github.com/Gergenus/commerce/product-service/internal/models"
 )
 
 type RepositoryInterface interface {

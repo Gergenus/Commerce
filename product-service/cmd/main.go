@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/Gergenus/commerce/user-service/internal/config"
-	handlers "github.com/Gergenus/commerce/user-service/internal/handler"
-	"github.com/Gergenus/commerce/user-service/internal/repository"
-	"github.com/Gergenus/commerce/user-service/internal/service"
-	dbpkg "github.com/Gergenus/commerce/user-service/pkg/db"
-	"github.com/Gergenus/commerce/user-service/pkg/logger"
+	"github.com/Gergenus/commerce/product-service/internal/config"
+	handlers "github.com/Gergenus/commerce/product-service/internal/handler"
+	"github.com/Gergenus/commerce/product-service/internal/repository"
+	"github.com/Gergenus/commerce/product-service/internal/service"
+	dbpkg "github.com/Gergenus/commerce/product-service/pkg/db"
+	"github.com/Gergenus/commerce/product-service/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -23,11 +23,11 @@ func main() {
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-
 	group := e.Group("/api/v1/products")
 	{
 		group.POST("/", hand.AddCategory)
 	}
 
 	e.Start(":" + cfg.HTTPPort)
+
 }
