@@ -30,14 +30,14 @@ func main() {
 	// }
 
 	// e.Start(":" + cfg.HTTPPort)
-	z, err := repo.AddCategory(context.Background(), "SVO")
+	z, err := repo.CreateProduct(context.Background(), models.Product{ProductName: "SEX", Price: 300.5, SellerID: 1488, CategoryID: 1})
 	if err != nil {
 		log.Println(err)
 	}
 	fmt.Println(z)
-	id, err := repo.CreateProduct(context.Background(), models.Product{ProductName: "ТАНК", Price: 5000.5, SellerID: 5, CategoryID: 1})
+	model, err := repo.GetProductsByCategory(context.Background(), "SEX")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
-	fmt.Println(id)
+	fmt.Println(model == nil)
 }
