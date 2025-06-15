@@ -14,7 +14,8 @@ CREATE TABLE product_list (
 );
 
 CREATE TABLE stock (
-    seller_id INT NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    seller_id INT NOT NULL REFERENCES product_list(seller_id) ON DELETE CASCADE,
     product_id INT REFERENCES product_list(id) ON DELETE CASCADE,
     stock INT default 0
 );

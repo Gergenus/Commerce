@@ -18,6 +18,8 @@ var (
 	ErrProductIDNotFound     = errors.New("product id not found")
 	ErrNoSuchCategoryExists  = errors.New("no such category exists")
 	ErrNoSuchProductExists   = errors.New("no such product exists")
+	ErrStockNotFound         = errors.New("stock not found")
+	ErrNoStocksAvailable     = errors.New("no stocks available")
 )
 
 type PostgresRepository struct {
@@ -71,16 +73,56 @@ func (p *PostgresRepository) DeleteCategoryByID(ctx context.Context, id int) err
 	return nil
 }
 
-func (p *PostgresRepository) GetStockByID(ctx context.Context, id int) (int, error) {
-	panic("implement")
+func (p *PostgresRepository) GetStockByID(ctx context.Context, product_id, seller_id int) (int, error) {
+	const op = "repository.GetStockByID"
+	var stock int
+	err := p.db.DB.QueryRow(ctx, "SELECT stock FROM stock WHERE product_id = $1 AND seller_id = $2", product_id, seller_id).Scan(&stock)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return -1, fmt.Errorf("%s: %w", op, ErrStockNotFound)
+		}
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return stock, nil
 }
 
-func (p *PostgresRepository) AddStockByID(ctx context.Context, id int, number int) (int, error) {
-	panic("implement")
+// Either add new stock row or add number to it. Returns id of an added row
+func (p *PostgresRepository) AddStockByID(ctx context.Context, seller_id, product_id, number int) (int, error) {
+	const op = "repository.AddStockByID"
+	stock, err := p.GetStockByID(ctx, product_id, seller_id)
+	if err != nil {
+		if errors.Is(err, ErrStockNotFound) {
+			var id int
+			err := p.db.DB.QueryRow(ctx, "INSERT INTO stock (stock, product_id, seller_id) VALUES($1, $2, $3) RETURNING id", number, product_id, seller_id).Scan(&id)
+			if err != nil {
+				return -1, fmt.Errorf("%s: %w", op, err)
+			}
+			return id, nil
+		}
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = p.db.DB.Exec(ctx, "UPDATE stock SET stock = $1 WHERE product_id = $2 AND seller_id = $3", stock+number, product_id, seller_id)
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return 0, nil
 }
 
-func (p *PostgresRepository) ReduceStock(ctx context.Context, id int, number int) (int, error) {
-	panic("implement")
+// returns updated stock
+func (p *PostgresRepository) ReduceStock(ctx context.Context, seller_id, product_id, number int) (int, error) {
+	const op = "repository.ReduceStock"
+	stock, err := p.GetStockByID(ctx, seller_id, product_id)
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	if stock-number < 0 {
+		return -1, fmt.Errorf("%s: %w", op, ErrNoStocksAvailable)
+	}
+	_, err = p.db.DB.Exec(ctx, "UPDATE stock SET stock = $1 WHERE product_id = $2 AND seller_id = $3", stock-number, product_id, seller_id)
+	if err != nil {
+		return -1, fmt.Errorf("%s: %w", op, err)
+	}
+	return stock - number, nil
 }
 
 // One seller cannot hold any items with the same names
@@ -155,6 +197,29 @@ func (p *PostgresRepository) GetProductsByCategory(ctx context.Context, category
 
 	var products []models.Product
 	rows, err := p.db.DB.Query(ctx, "SELECT * FROM product_list WHERE category_id = $1", id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var product models.Product
+		err := rows.Scan(&product.ID, &product.ProductName, &product.Price, &product.SellerID, &product.CategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		products = append(products, product)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return products, nil
+}
+
+func (p *PostgresRepository) GetProductsBySellerID(ctx context.Context, seller_id int) ([]models.Product, error) {
+	const op = "repository.GetProductsBySellerID"
+	var products []models.Product
+
+	rows, err := p.db.DB.Query(ctx, "SELECT * FROM product_list WHERE seller_id = $1", seller_id)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
