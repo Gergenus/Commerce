@@ -70,7 +70,7 @@ func (p *ProductHandler) CreateProduct(c echo.Context) error {
 			})
 		}
 		if errors.Is(err, service.ErrNoSuchCategoryExists) {
-			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			return c.JSON(http.StatusBadRequest, map[string]interface{}{
 				"error":       service.ErrNoSuchCategoryExists.Error(),
 				"category_id": product.CategoryID,
 			})
@@ -96,6 +96,11 @@ func (p *ProductHandler) GetStockByID(c echo.Context) error {
 	}
 	stock, err := p.service.GetStockByID(c.Request().Context(), productId, sellerId)
 	if err != nil {
+		if errors.Is(err, service.ErrStockNotFound) {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error": "Stock not found",
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": "Internal error",
 		})

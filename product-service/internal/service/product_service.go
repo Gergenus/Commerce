@@ -59,6 +59,7 @@ func (p *ProductService) CreateProduct(ctx context.Context, product models.Produ
 	if err != nil {
 		p.log.Error("creating product error", slog.String("error", err.Error()))
 		if errors.Is(err, repository.ErrNoSuchCategoryExists) {
+			p.log.Error("creating product error", slog.String("error", err.Error()))
 			return -1, fmt.Errorf("%s: %w", op, ErrNoSuchCategoryExists)
 		}
 		return -1, fmt.Errorf("%s: %w", op, ErrFailedCreateProduct)
