@@ -6,6 +6,7 @@ import (
 	"github.com/Gergenus/commerce/user-service/internal/repository"
 	"github.com/Gergenus/commerce/user-service/internal/service"
 	dbpkg "github.com/Gergenus/commerce/user-service/pkg/db"
+	"github.com/Gergenus/commerce/user-service/pkg/jwtpkg"
 	"github.com/Gergenus/commerce/user-service/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -18,7 +19,8 @@ func main() {
 	log := logger.SetUp(cfg.LogLevel)
 
 	repo := repository.NewPostgresRepository(db)
-	srv := service.NewUserService(log, &repo)
+	jwtstr := jwtpkg.NewUserJWTpkg(cfg.JWTSecret)
+	srv := service.NewUserService(log, &repo, jwtstr)
 	handler := handlers.NewUserHandler(&srv)
 
 	e := echo.New()
@@ -26,7 +28,9 @@ func main() {
 	e.Use(middleware.Recover())
 	group := e.Group("/api/v1/users")
 	{
-		group.POST("/register", handler.Register)
+		group.POST("/auth/register", handler.Register)
+		group.POST("/auth/login", handler.Login)
+		group.GET("/auth/test", handler.Test)
 	}
 	e.Start(":" + cfg.HTTPPort)
 }

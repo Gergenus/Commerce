@@ -18,3 +18,16 @@ func HashPassword(password string) (string, error) {
 func CheckPassword(hashedPassword, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) == nil
 }
+
+func HashToken(token string) (string, error) {
+	const op = "hash.HashPassword"
+	hash, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+	return string(hash), nil
+}
+
+func CheckToken(hashedToken, token string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hashedToken), []byte(token)) == nil
+}
