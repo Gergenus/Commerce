@@ -55,7 +55,7 @@ func (p *ProductHandler) CreateProduct(c echo.Context) error {
 			"error": "Invalid request payload",
 		})
 	}
-	sellerID, ok := c.Get("seller_id").(int)
+	sellerID, ok := c.Get("uuid").(string)
 	if !ok {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": "claims error",
@@ -86,7 +86,7 @@ func (p *ProductHandler) CreateProduct(c echo.Context) error {
 
 func (p *ProductHandler) GetStockByID(c echo.Context) error {
 	productIdString := c.QueryParam("product_id")
-	sellerId := c.Get("seller_id").(int)
+	sellerId := c.Get("uuid").(string)
 
 	productId, err := strconv.Atoi(productIdString)
 	if err != nil {
@@ -114,7 +114,7 @@ func (p *ProductHandler) GetStockByID(c echo.Context) error {
 
 func (p *ProductHandler) AddStockByID(c echo.Context) error {
 	var stockReq models.AddStockRequest
-	sellerID := c.Get("seller_id").(int)
+	sellerID := c.Get("uuid").(string)
 	err := c.Bind(&stockReq)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{

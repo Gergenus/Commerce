@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/Gergenus/commerce/product-service/internal/config"
 	"github.com/Gergenus/commerce/product-service/internal/handlers"
@@ -17,7 +15,6 @@ import (
 )
 
 func main() {
-	fmt.Println(time.Now().Add(time.Hour).Unix())
 	cfg := config.InitConfig()
 	db := dbpkg.InitDB(cfg.PostgresURL)
 	defer db.DB.Close(context.Background())

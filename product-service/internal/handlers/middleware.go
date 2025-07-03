@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
-	"strings"
 
 	"github.com/Gergenus/commerce/product-service/pkg/jwtpkg"
 	"github.com/labstack/echo/v4"
@@ -20,21 +20,26 @@ func NewProductMiddleware(jwtProduct jwtpkg.JWTinterface) ProductMiddleware {
 
 func (p ProductMiddleware) Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tokenString := c.Request().Header.Get("Authorization")
-		if tokenString == "" {
+		cookie, err := c.Cookie("AccessToken")
+		if err != nil {
+			log.Println(err)
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"error": "getting token error",
+			})
+		}
+		if cookie.Value == "" {
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 				"error": "No auth token",
 			})
 		}
-		token := strings.Split(tokenString, " ")[1]
-		role, sellerID, err := p.jwtProduct.ParseToken(token)
+		role, uuid, err := p.jwtProduct.ParseToken(cookie.Value)
 		if err != nil {
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 				"error": "Invalid token",
 			})
 		}
 		c.Set("role", role)
-		c.Set("seller_id", sellerID)
+		c.Set("uuid", uuid)
 		return next(c)
 	}
 }

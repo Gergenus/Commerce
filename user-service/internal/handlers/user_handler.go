@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const AccessTokenDuration = 15 * 60
+const AccessTokenDuration = 60 * 24 * 60 * 60
 const RefreshTokenDuration = 60 * 24 * 60 * 60
 
 type UserHandler struct {
@@ -91,7 +91,7 @@ func setCookie(c echo.Context, key, value string, duration int) error {
 		Secure:   true,
 		MaxAge:   duration,
 		Value:    value,
-		Path:     "/api/v1/users/auth",
+		Path:     "/api/v1",
 	}
 	c.SetCookie(&cookie)
 	return nil
@@ -99,9 +99,13 @@ func setCookie(c echo.Context, key, value string, duration int) error {
 
 func (u *UserHandler) Test(c echo.Context) error {
 	AccessToken, err := c.Cookie("AccessToken")
-	log.Println(err)
+	if err != nil {
+		return err
+	}
 	RefreshToken, err := c.Cookie("RefreshToken")
-	log.Println(err)
+	if err != nil {
+		return err
+	}
 	return c.JSON(200, map[string]interface{}{
 		"AccessToken":  AccessToken.Value,
 		"RefreshToken": RefreshToken.Value,

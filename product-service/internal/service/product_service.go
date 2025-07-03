@@ -44,7 +44,7 @@ func (p *ProductService) AddCategory(ctx context.Context, category string) (int,
 
 func (p *ProductService) CreateProduct(ctx context.Context, product models.Product) (int, error) {
 	const op = "service.CreateProduct"
-	p.log.Info("creating product", slog.String("product_name", product.ProductName), slog.Int("seller_id", product.SellerID),
+	p.log.Info("creating product", slog.String("product_name", product.ProductName), slog.String("seller_id", product.SellerID),
 		slog.Float64("price", product.Price), slog.Int("category_id", product.CategoryID))
 
 	check, err := p.repo.CheckProductExists(ctx, product.SellerID, product.ProductName)
@@ -67,13 +67,13 @@ func (p *ProductService) CreateProduct(ctx context.Context, product models.Produ
 	return id, nil
 }
 
-func (p *ProductService) GetStockByID(ctx context.Context, product_id, seller_id int) (int, error) {
+func (p *ProductService) GetStockByID(ctx context.Context, product_id int, seller_id string) (int, error) {
 	const op = "service.GetStockByID"
-	p.log.Info("getting stock", slog.Int("product_id", product_id), slog.Int("seller_id", seller_id))
+	p.log.Info("getting stock", slog.Int("product_id", product_id), slog.String("seller_id", seller_id))
 	stock, err := p.repo.GetStockByID(ctx, product_id, seller_id)
 	if err != nil {
 		if errors.Is(err, repository.ErrStockNotFound) {
-			p.log.Error("stock not found", slog.Int("product_id", product_id), slog.Int("seller_id", seller_id))
+			p.log.Error("stock not found", slog.Int("product_id", product_id), slog.String("seller_id", seller_id))
 			return -1, fmt.Errorf("%s: %w", op, ErrStockNotFound)
 		}
 		return -1, fmt.Errorf("%s: %w", op, err)
@@ -81,9 +81,9 @@ func (p *ProductService) GetStockByID(ctx context.Context, product_id, seller_id
 	return stock, nil
 }
 
-func (p *ProductService) AddStockByID(ctx context.Context, seller_id, product_id, number int) (int, error) {
+func (p *ProductService) AddStockByID(ctx context.Context, seller_id string, product_id, number int) (int, error) {
 	const op = "service.AddStockByID"
-	p.log.Info("adding stock", slog.Int("id", product_id), slog.Int("seller_id", seller_id))
+	p.log.Info("adding stock", slog.Int("id", product_id), slog.String("seller_id", seller_id))
 	id, err := p.repo.AddStockByID(ctx, seller_id, product_id, number)
 	if err != nil {
 		p.log.Error("error adding stock by id", slog.String("error", err.Error()))
