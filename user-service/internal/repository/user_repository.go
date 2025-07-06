@@ -26,7 +26,7 @@ func NewPostgresRepository(db dbpkg.PostgresDB) PostgresRepository {
 }
 
 func (p *PostgresRepository) AddUser(ctx context.Context, user models.User) (*uuid.UUID, error) {
-	const op = ""
+	const op = "repository.AddUser"
 	tx, err := p.db.DB.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -65,12 +65,37 @@ func (p *PostgresRepository) GetUser(ctx context.Context, email string) (*models
 
 }
 
-func (p *PostgresRepository) CreateJWTSession(ctx context.Context, user models.User, refreshTokenHash, fingerprint, ip string, expiresIn int64) error {
+func (p *PostgresRepository) CreateJWTSession(ctx context.Context, userId string, refreshToken, fingerprint, ip string, expiresIn int64) error {
 	const op = "repository.CreateJWTSession"
 	_, err := p.db.DB.Exec(ctx, "INSERT INTO refreshsessions (userId, refreshToken, fingerprint, ip, expiresIn) VALUES($1, $2, $3, $4, $5)",
-		user.ID.String(), refreshTokenHash, fingerprint, ip, expiresIn)
+		userId, refreshToken, fingerprint, ip, expiresIn)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
+}
+
+func (p *PostgresRepository) GetRefreshSession(ctx context.Context, oldUuid string) (*models.RefreshSession, error) {
+	const op = "repository.GetRefreshSession"
+	tx, err := p.db.DB.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer tx.Rollback(ctx)
+
+	var session models.RefreshSession
+	err = tx.QueryRow(ctx, "SELECT * FROM refreshSessions WHERE refreshToken = $1", oldUuid).Scan(&session.ID, &session.UserID, &session.ResfreshToken, &session.Fingerprint, &session.IP, &session.ExpiresIn,
+		&session.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	_, err = tx.Exec(ctx, "DELETE FROM refreshSessions WHERE refreshToken = $1", oldUuid)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &session, nil
 }

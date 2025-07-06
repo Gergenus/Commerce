@@ -17,9 +17,11 @@ import (
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrIncorrectEmail    = errors.New("incorrect email")
-	ErrPasswordMismatch  = errors.New("passwords mismatch")
+	ErrUserAlreadyExists     = errors.New("user already exists")
+	ErrIncorrectEmail        = errors.New("incorrect email")
+	ErrPasswordMismatch      = errors.New("passwords mismatch")
+	ErrTokenExpired          = errors.New("token expired")
+	ErrInvalidRefreshSession = errors.New("invalid refresh session")
 )
 
 type UserService struct {
@@ -85,10 +87,44 @@ func (u *UserService) Login(ctx context.Context, email, password, userAgent, ip 
 
 	fingerprint := utils.CreateFingerprint(ip, userAgent)
 
-	err = u.repo.CreateJWTSession(ctx, *user, RefreshToken, fingerprint, ip, time.Now().Add(7*24*time.Hour).Unix())
+	err = u.repo.CreateJWTSession(ctx, user.ID.String(), RefreshToken, fingerprint, ip, time.Now().Add(7*24*time.Hour).Unix())
 	if err != nil {
 		u.log.Error("failed to create jwt session", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 	return AccessToken, RefreshToken, nil
+}
+
+// returns both new refreshtoken and accesToken
+func (u *UserService) RefreshToken(ctx context.Context, oldUuid uuid.UUID, userAgent, ip string, oldAccessToken string) (*uuid.UUID, string, error) {
+	const op = "service.RefreshToken"
+	log := u.log.With(slog.String("op", op))
+	log.Info("refreshing token")
+	session, err := u.repo.GetRefreshSession(ctx, oldUuid.String())
+	if err != nil {
+		log.Error("getting refresh token error", slog.String("error", err.Error()))
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+	if session.ExpiresIn < time.Now().Unix() {
+		return nil, "", ErrTokenExpired
+	}
+	fingerprint := utils.CreateFingerprint(ip, userAgent)
+
+	if session.Fingerprint != fingerprint {
+		return nil, "", ErrInvalidRefreshSession
+	}
+	newRefresh := uuid.New()
+	err = u.repo.CreateJWTSession(ctx, session.UserID.String(), newRefresh.String(), session.Fingerprint,
+		session.IP, time.Now().Add(7*24*time.Hour).Unix())
+	if err != nil {
+		log.Error("creating jwt session error", slog.String("error", err.Error()))
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	token, err := u.jwtToken.RegenerateToken(oldAccessToken)
+	if err != nil {
+		log.Error("creating jwt token error", slog.String("error", err.Error()))
+		return nil, "", fmt.Errorf("%s: %w", op, err)
+	}
+	return &newRefresh, token, nil
 }

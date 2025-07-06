@@ -30,7 +30,7 @@ func main() {
 	{
 		group.POST("/auth/register", handler.Register)
 		group.POST("/auth/login", handler.Login)
-		group.GET("/auth/test", handler.Test)
+		group.POST("/auth/refresh", handler.Refresh)
 	}
 	e.Start(":" + cfg.HTTPPort)
 }

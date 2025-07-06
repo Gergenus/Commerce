@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/Gergenus/commerce/user-service/internal/models"
 	"github.com/Gergenus/commerce/user-service/internal/service"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -69,13 +69,11 @@ func (u *UserHandler) Login(c echo.Context) error {
 	}
 	err = setCookie(c, "AccessToken", AccessToken, AccessTokenDuration)
 	if err != nil {
-		log.Println(err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
 	}
 
 	err = setCookie(c, "RefreshToken", RefreshToken, RefreshTokenDuration)
 	if err != nil {
-		log.Println(err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "internal error")
 	}
 	return c.JSON(http.StatusAccepted, map[string]interface{}{
@@ -97,17 +95,45 @@ func setCookie(c echo.Context, key, value string, duration int) error {
 	return nil
 }
 
-func (u *UserHandler) Test(c echo.Context) error {
-	AccessToken, err := c.Cookie("AccessToken")
+func (u *UserHandler) Refresh(c echo.Context) error {
+	oldRefresh, err := c.Cookie("RefreshToken")
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "internal server error",
+		})
 	}
-	RefreshToken, err := c.Cookie("RefreshToken")
+	refreshUUID, err := uuid.Parse(oldRefresh.Value)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "internal server error",
+		})
 	}
-	return c.JSON(200, map[string]interface{}{
-		"AccessToken":  AccessToken.Value,
-		"RefreshToken": RefreshToken.Value,
+	expiredAccesToken, err := c.Cookie("AccessToken")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "internal server error",
+		})
+	}
+	newRefresh, newAccess, err := u.srv.RefreshToken(c.Request().Context(), refreshUUID, c.Request().UserAgent(), c.RealIP(), expiredAccesToken.Value)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidRefreshSession) {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error": "invalid refresh session",
+			})
+		}
+		if errors.Is(err, service.ErrTokenExpired) {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"error": "token expired",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "internal server error",
+		})
+	}
+	setCookie(c, "RefreshToken", newRefresh.String(), RefreshTokenDuration)
+	setCookie(c, "AccessToken", newAccess, AccessTokenDuration)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"AccessToken":  newAccess,
+		"RefreshToken": newRefresh,
 	})
 }
