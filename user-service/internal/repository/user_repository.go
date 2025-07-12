@@ -13,6 +13,7 @@ import (
 
 var (
 	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrNoSessionFound    = errors.New("no session found")
 )
 
 type PostgresRepository struct {
@@ -98,4 +99,16 @@ func (p *PostgresRepository) GetRefreshSession(ctx context.Context, oldUuid stri
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &session, nil
+}
+
+func (p *PostgresRepository) DeleteSession(ctx context.Context, refreshToken string) error {
+	const op = "repository.DeleteSession"
+	row, err := p.db.DB.Exec(ctx, "DELETE FROM refreshSessions WHERE refreshToken = $1", refreshToken)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if row.RowsAffected() == 0 {
+		return ErrNoSessionFound
+	}
+	return nil
 }

@@ -137,3 +137,26 @@ func (u *UserHandler) Refresh(c echo.Context) error {
 		"RefreshToken": newRefresh,
 	})
 }
+
+func (u *UserHandler) Logout(c echo.Context) error {
+	cookie, err := c.Cookie("RefreshToken")
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "bad request",
+		})
+	}
+	err = u.srv.Logout(c.Request().Context(), cookie.Value)
+	if err != nil {
+		if errors.Is(err, service.ErrNoSessionFound) {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"error": "unauthorized",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": "internal error",
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"logout": cookie.Value,
+	})
+}

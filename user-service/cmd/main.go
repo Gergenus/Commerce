@@ -18,9 +18,10 @@ func main() {
 	defer db.DB.Close()
 	log := logger.SetUp(cfg.LogLevel)
 
+	jwtstr := jwtpkg.NewUserJWTpkg(cfg.JWTSecret, cfg.AccessTTL)
+
 	repo := repository.NewPostgresRepository(db)
-	jwtstr := jwtpkg.NewUserJWTpkg(cfg.JWTSecret)
-	srv := service.NewUserService(log, &repo, jwtstr)
+	srv := service.NewUserService(log, &repo, jwtstr, cfg.RefreshTTl)
 	handler := handlers.NewUserHandler(&srv)
 
 	e := echo.New()
@@ -31,6 +32,7 @@ func main() {
 		group.POST("/auth/register", handler.Register)
 		group.POST("/auth/login", handler.Login)
 		group.POST("/auth/refresh", handler.Refresh)
+		group.POST("/auth/logout", handler.Logout)
 	}
 	e.Start(":" + cfg.HTTPPort)
 }

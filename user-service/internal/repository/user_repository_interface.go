@@ -12,4 +12,5 @@ type RepositoryInterface interface {
 	GetUser(ctx context.Context, email string) (*models.User, error)
 	CreateJWTSession(ctx context.Context, userId string, refreshToken, fingerprint, ip string, expiresIn int64) error
 	GetRefreshSession(ctx context.Context, oldUuid string) (*models.RefreshSession, error)
+	DeleteSession(ctx context.Context, refreshToken string) error
 }

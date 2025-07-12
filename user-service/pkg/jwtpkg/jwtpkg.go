@@ -15,7 +15,8 @@ var (
 )
 
 type UserJWTpkg struct {
-	Secret string
+	Secret    string
+	AccessTTL time.Duration
 }
 
 type UserJWTInterface interface {
@@ -23,14 +24,14 @@ type UserJWTInterface interface {
 	RegenerateToken(oldToken string) (string, error)
 }
 
-func NewUserJWTpkg(Secret string) UserJWTpkg {
-	return UserJWTpkg{Secret: Secret}
+func NewUserJWTpkg(Secret string, AccessTTL time.Duration) UserJWTpkg {
+	return UserJWTpkg{Secret: Secret, AccessTTL: AccessTTL}
 }
 
 func (u UserJWTpkg) GenerateAccessToken(user models.User) (string, error) {
 	const op = "jwtpkg.GenerateAccessToken"
 	claims := jwt.MapClaims{}
-	claims["exp"] = time.Now().Add(15 * time.Minute).Unix()
+	claims["exp"] = time.Now().Add(u.AccessTTL).Unix()
 	claims["uuid"] = user.ID.String()
 	claims["verified"] = user.Verified
 	claims["role"] = user.Role

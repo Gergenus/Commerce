@@ -22,16 +22,18 @@ var (
 	ErrPasswordMismatch      = errors.New("passwords mismatch")
 	ErrTokenExpired          = errors.New("token expired")
 	ErrInvalidRefreshSession = errors.New("invalid refresh session")
+	ErrNoSessionFound        = errors.New("no session found")
 )
 
 type UserService struct {
-	log      *slog.Logger
-	repo     repository.RepositoryInterface
-	jwtToken jwtpkg.UserJWTInterface
+	log        *slog.Logger
+	repo       repository.RepositoryInterface
+	jwtToken   jwtpkg.UserJWTInterface
+	RefreshTTl time.Duration
 }
 
-func NewUserService(log *slog.Logger, repo repository.RepositoryInterface, jwtToken jwtpkg.UserJWTInterface) UserService {
-	return UserService{log: log, repo: repo, jwtToken: jwtToken}
+func NewUserService(log *slog.Logger, repo repository.RepositoryInterface, jwtToken jwtpkg.UserJWTInterface, RefreshTTl time.Duration) UserService {
+	return UserService{log: log, repo: repo, jwtToken: jwtToken, RefreshTTl: RefreshTTl}
 }
 
 func (u *UserService) AddUser(ctx context.Context, user models.User) (*uuid.UUID, error) {
@@ -87,7 +89,7 @@ func (u *UserService) Login(ctx context.Context, email, password, userAgent, ip 
 
 	fingerprint := utils.CreateFingerprint(ip, userAgent)
 
-	err = u.repo.CreateJWTSession(ctx, user.ID.String(), RefreshToken, fingerprint, ip, time.Now().Add(7*24*time.Hour).Unix())
+	err = u.repo.CreateJWTSession(ctx, user.ID.String(), RefreshToken, fingerprint, ip, time.Now().Add(u.RefreshTTl).Unix())
 	if err != nil {
 		u.log.Error("failed to create jwt session", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
@@ -115,7 +117,7 @@ func (u *UserService) RefreshToken(ctx context.Context, oldUuid uuid.UUID, userA
 	}
 	newRefresh := uuid.New()
 	err = u.repo.CreateJWTSession(ctx, session.UserID.String(), newRefresh.String(), session.Fingerprint,
-		session.IP, time.Now().Add(7*24*time.Hour).Unix())
+		session.IP, time.Now().Add(u.RefreshTTl).Unix())
 	if err != nil {
 		log.Error("creating jwt session error", slog.String("error", err.Error()))
 		return nil, "", fmt.Errorf("%s: %w", op, err)
@@ -127,4 +129,20 @@ func (u *UserService) RefreshToken(ctx context.Context, oldUuid uuid.UUID, userA
 		return nil, "", fmt.Errorf("%s: %w", op, err)
 	}
 	return &newRefresh, token, nil
+}
+
+func (u *UserService) Logout(ctx context.Context, refreshToken string) error {
+	const op = "service.Logout"
+	log := u.log.With(slog.String("op", op))
+	log.Info("deleting session", slog.String("refresh", refreshToken))
+	err := u.repo.DeleteSession(ctx, refreshToken)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoSessionFound) {
+			return ErrNoSessionFound
+		}
+		log.Error("deleteing session error", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	log.Info("deleted session", slog.String("refresh", refreshToken))
+	return nil
 }
