@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Gergenus/commerce/user-service/internal/brocker"
 	"github.com/Gergenus/commerce/user-service/internal/models"
 	"github.com/Gergenus/commerce/user-service/internal/repository"
 	"github.com/Gergenus/commerce/user-service/pkg/hash"
@@ -26,14 +27,16 @@ var (
 )
 
 type UserService struct {
-	log        *slog.Logger
-	repo       repository.RepositoryInterface
-	jwtToken   jwtpkg.UserJWTInterface
-	RefreshTTl time.Duration
+	log           *slog.Logger
+	repo          repository.RepositoryInterface
+	jwtToken      jwtpkg.UserJWTInterface
+	RefreshTTl    time.Duration
+	EventProducer brocker.BrockerInterface
 }
 
-func NewUserService(log *slog.Logger, repo repository.RepositoryInterface, jwtToken jwtpkg.UserJWTInterface, RefreshTTl time.Duration) UserService {
-	return UserService{log: log, repo: repo, jwtToken: jwtToken, RefreshTTl: RefreshTTl}
+func NewUserService(log *slog.Logger, repo repository.RepositoryInterface,
+	jwtToken jwtpkg.UserJWTInterface, RefreshTTl time.Duration, EventProducer brocker.BrockerInterface) UserService {
+	return UserService{log: log, repo: repo, jwtToken: jwtToken, RefreshTTl: RefreshTTl, EventProducer: EventProducer}
 }
 
 func (u *UserService) AddUser(ctx context.Context, user models.User) (*uuid.UUID, error) {
@@ -144,5 +147,24 @@ func (u *UserService) Logout(ctx context.Context, refreshToken string) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	log.Info("deleted session", slog.String("refresh", refreshToken))
+	return nil
+}
+
+// the token consists of expiration time and email
+func (u *UserService) Verification(ctx context.Context, token string) error {
+	const op = "service.Verification"
+	log := u.log.With(slog.String("op", op))
+	log.Info("verificating the profile", slog.String("token", token))
+
+	email, err := u.jwtToken.ParseMailToken(token)
+	if err != nil {
+		log.Error("token parsing error", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	err = u.repo.Verification(ctx, email)
+	if err != nil {
+		log.Error("verification error", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
 	return nil
 }

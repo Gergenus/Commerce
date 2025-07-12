@@ -1,20 +1,26 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/Gergenus/commerce/notification-service/internal/brocker"
 	"github.com/Gergenus/commerce/notification-service/internal/config"
 	"github.com/Gergenus/commerce/notification-service/internal/email"
+	"github.com/Gergenus/commerce/notification-service/internal/service"
+	"github.com/Gergenus/commerce/notification-service/pkg/jwtpkg"
+	"github.com/Gergenus/commerce/notification-service/pkg/kafka"
 	"github.com/Gergenus/commerce/notification-service/pkg/logger"
 )
 
 func main() {
 	cfg := config.InitConfig()
-	logger := logger.SetUp(cfg.LogLevel)
-	mail := email.NewEmailSender(cfg.FromEmail, cfg.FromEmailPassword, cfg.FromEmailSMTP, cfg.SMTPAddr, logger)
+	log := logger.SetUp(cfg.LogLevel)
+	mail := email.NewEmailSender(cfg.FromEmail, cfg.FromEmailPassword, cfg.FromEmailSMTP, cfg.SMTPAddr, log)
+	log.Info("starting the project")
+	jwtPkg := jwtpkg.NewJWTpkg(cfg.JWTMailSecret, cfg.TokenTTL)
 
-	err := mail.SendVerificationEmail("khakimoff.dima@mail.ru", "registration", "verification_email", map[string]string{"VerificationLink": "http://localhost:8081/verification=1488gfdnjlgkfndhbnb"})
+	kafkaConsumer := kafka.ConnectConsumer([]string{cfg.KafkaURL})
+	kafkaBrocker := brocker.NewKafkaBrocker(kafkaConsumer)
+	servce := service.NewNotificationService(log, &mail, kafkaBrocker, jwtPkg)
 
-	fmt.Println(err)
-
+	servce.ListenToTopic("mail")
+	log.Info("stopping the project")
 }

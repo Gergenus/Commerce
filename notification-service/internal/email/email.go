@@ -12,6 +12,11 @@ type JWTGenerator interface {
 	GenerateToken(email string) (string, error)
 }
 
+type EmailSenderInterface interface {
+	// vars: VerificationLink
+	SendVerificationEmail(toAddr, subject, Template string, vars map[string]string) error
+}
+
 type EmailSender struct {
 	FromEmail         string
 	FromEmailPassword string

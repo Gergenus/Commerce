@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrNoSessionFound    = errors.New("no session found")
+	ErrUserAlreadyExists  = errors.New("user already exists")
+	ErrNoSessionFound     = errors.New("no session found")
+	ErrVerificationFailed = errors.New("verification failed")
 )
 
 type PostgresRepository struct {
@@ -66,6 +67,18 @@ func (p *PostgresRepository) GetUser(ctx context.Context, email string) (*models
 
 }
 
+func (p *PostgresRepository) GetUserByUUID(ctx context.Context, uuid string) (*models.User, error) {
+	const op = "repository.GetUser"
+	var user models.User
+	err := p.db.DB.QueryRow(ctx, "SELECT id, username, email, verified, role, hashpassword FROM users WHERE id = $1", uuid).Scan(&user.ID,
+		&user.Username, &user.Email, &user.Verified, &user.Role, &user.Password)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return &user, nil
+
+}
+
 func (p *PostgresRepository) CreateJWTSession(ctx context.Context, userId string, refreshToken, fingerprint, ip string, expiresIn int64) error {
 	const op = "repository.CreateJWTSession"
 	_, err := p.db.DB.Exec(ctx, "INSERT INTO refreshsessions (userId, refreshToken, fingerprint, ip, expiresIn) VALUES($1, $2, $3, $4, $5)",
@@ -109,6 +122,19 @@ func (p *PostgresRepository) DeleteSession(ctx context.Context, refreshToken str
 	}
 	if row.RowsAffected() == 0 {
 		return ErrNoSessionFound
+	}
+	return nil
+}
+
+func (p *PostgresRepository) Verification(ctx context.Context, email string) error {
+	const op = "repository.Verification"
+	fmt.Println(email, "SVOSVOSVOVSOSVo")
+	row, err := p.db.DB.Exec(ctx, "UPDATE users SET verified = true WHERE email = $1", email)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if row.RowsAffected() == 0 {
+		return ErrVerificationFailed
 	}
 	return nil
 }

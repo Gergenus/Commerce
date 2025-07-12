@@ -160,3 +160,22 @@ func (u *UserHandler) Logout(c echo.Context) error {
 		"logout": cookie.Value,
 	})
 }
+
+func (u *UserHandler) Verification(c echo.Context) error {
+	verifToken := c.QueryParam("token")
+	if verifToken == "" {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"error": "invalid request",
+		})
+	}
+
+	err := u.srv.Verification(c.Request().Context(), verifToken)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"error": "unauthorized",
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success",
+	})
+}

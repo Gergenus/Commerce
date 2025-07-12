@@ -29,3 +29,7 @@ type RefreshSession struct {
 	ExpiresIn     int64
 	CreatedAt     time.Time
 }
+
+type ConfirmationRequest struct {
+	Email string `json:"email"`
+}

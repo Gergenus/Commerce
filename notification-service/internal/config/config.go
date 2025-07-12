@@ -15,6 +15,7 @@ type Config struct {
 	FromEmailPassword string
 	FromEmailSMTP     string
 	SMTPAddr          string
+	KafkaURL          string
 }
 
 func InitConfig() Config {
@@ -35,5 +36,6 @@ func InitConfig() Config {
 		FromEmailPassword: os.Getenv("FROM_EMAIL_PASSWORD"),
 		FromEmailSMTP:     os.Getenv("FROM_EMAIL_SMTP"),
 		SMTPAddr:          os.Getenv("SMTP_ADDR"),
+		KafkaURL:          os.Getenv("KAFKA_URL"),
 	}
 }

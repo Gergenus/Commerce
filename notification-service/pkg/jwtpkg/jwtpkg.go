@@ -12,13 +12,17 @@ type JWTpkg struct {
 	TokenTTL      time.Duration
 }
 
+type JWTpkgInterface interface {
+	GenerateToken(email string) (string, error)
+}
+
 func NewJWTpkg(Secret string, TokenTTL time.Duration) JWTpkg {
 	return JWTpkg{JWTMailSecret: Secret, TokenTTL: TokenTTL}
 }
 
-func (j *JWTpkg) GenerateToken(email string) (string, error) {
+func (j JWTpkg) GenerateToken(email string) (string, error) {
 	const op = "jwtpkg.GenerateToken"
-	tkn := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+	tkn := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
 		"exp":   time.Now().Add(j.TokenTTL).Unix(),
 	})

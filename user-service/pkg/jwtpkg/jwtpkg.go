@@ -11,21 +11,31 @@ import (
 )
 
 var (
-	ErrClaimsFailed = errors.New("claims failed")
+	ErrClaimsFailed         = errors.New("claims failed")
+	ErrInvalidSigningMethod = errors.New("invalid signing method")
+	ErrTokenExpired         = errors.New("token expired")
+	ErrUnauthorized         = errors.New("unauthorized")
+	ErrConversion           = errors.New("conversion error")
 )
 
 type UserJWTpkg struct {
-	Secret    string
-	AccessTTL time.Duration
+	Secret        string
+	AccessTTL     time.Duration
+	EmailTTL      time.Duration
+	JWTMailSecret string
 }
 
 type UserJWTInterface interface {
 	GenerateAccessToken(user models.User) (string, error)
 	RegenerateToken(oldToken string) (string, error)
+	// returns email
+	ParseMailToken(token string) (string, error)
+	// returns role, uuid and error
+	ParseToken(token string) (string, string, error)
 }
 
-func NewUserJWTpkg(Secret string, AccessTTL time.Duration) UserJWTpkg {
-	return UserJWTpkg{Secret: Secret, AccessTTL: AccessTTL}
+func NewUserJWTpkg(Secret string, AccessTTL, EmailTTL time.Duration, JWTMailSecret string) UserJWTpkg {
+	return UserJWTpkg{Secret: Secret, AccessTTL: AccessTTL, EmailTTL: EmailTTL, JWTMailSecret: JWTMailSecret}
 }
 
 func (u UserJWTpkg) GenerateAccessToken(user models.User) (string, error) {
@@ -65,4 +75,74 @@ func (u UserJWTpkg) RegenerateToken(oldToken string) (string, error) {
 		Verified: claims["verified"].(bool),
 	}
 	return u.GenerateAccessToken(user)
+}
+
+// returns email
+func (u UserJWTpkg) ParseMailToken(token string) (string, error) {
+	const op = "jwtpkg.ParseMailToken"
+	tkn, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, ErrInvalidSigningMethod
+		}
+		return []byte(u.JWTMailSecret), nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+	claims, ok := tkn.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", ErrClaimsFailed
+	}
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return "", ErrClaimsFailed
+	}
+	if int64(exp) < time.Now().Unix() {
+		return "", ErrTokenExpired
+	}
+	fmt.Println(exp)
+	email := claims["email"]
+	fmt.Println(email)
+	emailString, ok := email.(string)
+	if !ok {
+		return "", ErrClaimsFailed
+	}
+	return emailString, nil
+}
+
+// returns role, uuid and error
+func (j UserJWTpkg) ParseToken(token string) (string, string, error) {
+	keyfunc := func(t *jwt.Token) (interface{}, error) {
+		_, ok := t.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, ErrUnauthorized
+		}
+		return []byte(j.Secret), nil
+	}
+
+	tkn, err := jwt.Parse(token, keyfunc)
+	if err != nil {
+		return "", "", err
+	}
+
+	claims, ok := tkn.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", ErrClaimsFailed
+	}
+
+	if claims["exp"].(float64) < float64(time.Now().Unix()) {
+		return "", "", ErrTokenExpired
+	}
+
+	role, ok := claims["role"].(string)
+	if !ok {
+		return "", "", ErrConversion
+	}
+	uuid, ok := claims["uuid"].(string)
+	if !ok {
+		return "", "", ErrConversion
+	}
+
+	return role, uuid, nil
 }
