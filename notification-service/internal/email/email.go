@@ -36,6 +36,7 @@ func (e *EmailSender) sendHTMLEmail(to []string, subject, htmlbody string) error
 	return smtp.SendMail(e.SMTPAddr, auth, e.FromEmail, to, []byte(message))
 }
 
+// vars: VerificationLink
 func (e *EmailSender) SendVerificationEmail(toAddr, subject, Template string, vars map[string]string) error {
 	const op = "email.SendVerificationEmail"
 	log := e.log.With(slog.String("op", op))

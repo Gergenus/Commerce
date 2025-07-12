@@ -8,12 +8,12 @@ import (
 )
 
 type JWTpkg struct {
-	JWTSecret string
-	TokenTTL  time.Duration
+	JWTMailSecret string
+	TokenTTL      time.Duration
 }
 
 func NewJWTpkg(Secret string, TokenTTL time.Duration) JWTpkg {
-	return JWTpkg{JWTSecret: Secret, TokenTTL: TokenTTL}
+	return JWTpkg{JWTMailSecret: Secret, TokenTTL: TokenTTL}
 }
 
 func (j *JWTpkg) GenerateToken(email string) (string, error) {
@@ -23,7 +23,7 @@ func (j *JWTpkg) GenerateToken(email string) (string, error) {
 		"exp":   time.Now().Add(j.TokenTTL).Unix(),
 	})
 
-	token, err := tkn.SignedString([]byte(j.JWTSecret))
+	token, err := tkn.SignedString([]byte(j.JWTMailSecret))
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}

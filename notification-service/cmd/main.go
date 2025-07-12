@@ -13,7 +13,7 @@ func main() {
 	logger := logger.SetUp(cfg.LogLevel)
 	mail := email.NewEmailSender(cfg.FromEmail, cfg.FromEmailPassword, cfg.FromEmailSMTP, cfg.SMTPAddr, logger)
 
-	err := mail.SendVerificationEmail("khakimoff.dima@mail.ru", "registration", "verification_email", map[string]string{"VerificationLink": "http://localhost:8081/verification=1488gfdnjlgkfndhbnbft;kjnhbm;klhbnf;drsjnl;stkgn;kdjignrl;kgjinhrsd;gkjrig;ogdj;kljgnfrl;j"})
+	err := mail.SendVerificationEmail("khakimoff.dima@mail.ru", "registration", "verification_email", map[string]string{"VerificationLink": "http://localhost:8081/verification=1488gfdnjlgkfndhbnb"})
 
 	fmt.Println(err)
 

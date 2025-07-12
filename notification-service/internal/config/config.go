@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	LogLevel          string
-	JWTSecret         string
+	JWTMailSecret     string
 	TokenTTL          time.Duration
 	FromEmail         string
 	FromEmailPassword string
@@ -29,7 +29,7 @@ func InitConfig() Config {
 
 	return Config{
 		LogLevel:          os.Getenv("LogLevel"),
-		JWTSecret:         os.Getenv("JWTSecret"),
+		JWTMailSecret:     os.Getenv("JWT_MAIL_SECRET"),
 		TokenTTL:          TokenTTL,
 		FromEmail:         os.Getenv("FROM_EMAIL"),
 		FromEmailPassword: os.Getenv("FROM_EMAIL_PASSWORD"),
