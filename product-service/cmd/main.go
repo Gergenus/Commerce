@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 
 	"github.com/Gergenus/commerce/product-service/internal/config"
 	"github.com/Gergenus/commerce/product-service/internal/handlers"
@@ -10,8 +11,10 @@ import (
 	dbpkg "github.com/Gergenus/commerce/product-service/pkg/db"
 	"github.com/Gergenus/commerce/product-service/pkg/jwtpkg"
 	"github.com/Gergenus/commerce/product-service/pkg/logger"
+	"github.com/Gergenus/commerce/product-service/proto"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -25,6 +28,20 @@ func main() {
 	hand := handlers.NewProductHandler(&serv)
 	jwtPkg := jwtpkg.NewJWTpkg(cfg.JWTSecret, log)
 	middleWare := handlers.NewProductMiddleware(jwtPkg)
+
+	lis, err := net.Listen("tcp", cfg.GRPCAddress)
+	if err != nil {
+		panic(err)
+	}
+	s := grpc.NewServer()
+	proto.RegisterAvailablilityServiceServer(s, &hand)
+	go func() {
+		log.Info("starting gRPC server")
+		if err := s.Serve(lis); err != nil {
+			panic(err)
+		}
+
+	}()
 	e := echo.New()
 
 	e.Use(middleware.Logger())

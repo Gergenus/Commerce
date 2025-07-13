@@ -73,10 +73,10 @@ func (p *PostgresRepository) DeleteCategoryByID(ctx context.Context, id int) err
 	return nil
 }
 
-func (p *PostgresRepository) GetStockByID(ctx context.Context, product_id int, seller_id string) (int, error) {
+func (p *PostgresRepository) GetStockByID(ctx context.Context, product_id int) (int, error) {
 	const op = "repository.GetStockByID"
 	var stock int
-	err := p.db.DB.QueryRow(ctx, "SELECT stock FROM stock WHERE product_id = $1 AND seller_id = $2", product_id, seller_id).Scan(&stock)
+	err := p.db.DB.QueryRow(ctx, "SELECT stock FROM stock WHERE product_id = $1", product_id).Scan(&stock)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return -1, fmt.Errorf("%s: %w", op, ErrStockNotFound)
@@ -89,7 +89,7 @@ func (p *PostgresRepository) GetStockByID(ctx context.Context, product_id int, s
 // Either add new stock row or add number to it. Returns id of an added row
 func (p *PostgresRepository) AddStockByID(ctx context.Context, seller_id string, product_id, number int) (int, error) {
 	const op = "repository.AddStockByID"
-	stock, err := p.GetStockByID(ctx, product_id, seller_id)
+	stock, err := p.GetStockByID(ctx, product_id)
 	if err != nil {
 		if errors.Is(err, ErrStockNotFound) {
 			var id int
@@ -111,7 +111,7 @@ func (p *PostgresRepository) AddStockByID(ctx context.Context, seller_id string,
 // returns updated stock
 func (p *PostgresRepository) ReduceStock(ctx context.Context, seller_id string, product_id, number int) (int, error) {
 	const op = "repository.ReduceStock"
-	stock, err := p.GetStockByID(ctx, product_id, seller_id)
+	stock, err := p.GetStockByID(ctx, product_id)
 	if err != nil {
 		return -1, fmt.Errorf("%s: %w", op, err)
 	}

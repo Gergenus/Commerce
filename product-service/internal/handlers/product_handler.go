@@ -96,7 +96,7 @@ func (p *ProductHandler) GetStockByID(c echo.Context) error {
 			"error": "Invalid request payload",
 		})
 	}
-	stock, err := p.service.GetStockByID(c.Request().Context(), productId, sellerId)
+	stock, err := p.service.GetStockByID(c.Request().Context(), productId)
 	if err != nil {
 		if errors.Is(err, service.ErrStockNotFound) {
 			return c.JSON(http.StatusInternalServerError, map[string]interface{}{

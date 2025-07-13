@@ -11,6 +11,7 @@ type Config struct {
 	LogLevel    string
 	HTTPPort    string
 	JWTSecret   string
+	GRPCAddress string
 }
 
 func InitConfig() Config {
@@ -23,5 +24,6 @@ func InitConfig() Config {
 		LogLevel:    os.Getenv("LogLevel"),
 		HTTPPort:    os.Getenv("HTTPPort"),
 		JWTSecret:   os.Getenv("JWTSecret"),
+		GRPCAddress: os.Getenv("GRPC_ADDRESS"),
 	}
 }

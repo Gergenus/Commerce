@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrInvalidPayload = errors.New("invalid payload")
+	ErrInternal       = errors.New("internal error")
 )
 
 func (p *ProductHandler) IsAvailable(ctx context.Context, in *proto.AvailablilityRequest) (*proto.AvailablilityResponse, error) {
@@ -20,5 +21,13 @@ func (p *ProductHandler) IsAvailable(ctx context.Context, in *proto.Availablilit
 	if err != nil {
 		return &proto.AvailablilityResponse{}, ErrInvalidPayload
 	}
-	p.service.GetStockByID(ctx, productId)
+	stock, err := p.service.GetStockByID(ctx, productId)
+	if err != nil {
+		return &proto.AvailablilityResponse{}, ErrInternal
+
+	}
+	if stock < int(in.GetStock()) {
+		return &proto.AvailablilityResponse{Availablility: false}, nil
+	}
+	return &proto.AvailablilityResponse{Availablility: true}, nil
 }

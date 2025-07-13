@@ -10,7 +10,7 @@ type RepositoryInterface interface {
 	AddCategory(ctx context.Context, category string) (int, error)
 	GetCategoryID(ctx context.Context, category string) (int, error)
 	DeleteCategoryByID(ctx context.Context, id int) error
-	GetStockByID(ctx context.Context, product_id int, seller_id string) (int, error)         // must have
+	GetStockByID(ctx context.Context, product_id int) (int, error)                           // must have
 	AddStockByID(ctx context.Context, seller_id string, product_id, number int) (int, error) // must have
 	ReduceStock(ctx context.Context, seller_id string, product_id, number int) (int, error)
 	CreateProduct(ctx context.Context, product models.Product) (int, error) // must have

@@ -67,13 +67,13 @@ func (p *ProductService) CreateProduct(ctx context.Context, product models.Produ
 	return id, nil
 }
 
-func (p *ProductService) GetStockByID(ctx context.Context, product_id int, seller_id string) (int, error) {
+func (p *ProductService) GetStockByID(ctx context.Context, product_id int) (int, error) {
 	const op = "service.GetStockByID"
-	p.log.Info("getting stock", slog.Int("product_id", product_id), slog.String("seller_id", seller_id))
-	stock, err := p.repo.GetStockByID(ctx, product_id, seller_id)
+	p.log.Info("getting stock", slog.Int("product_id", product_id))
+	stock, err := p.repo.GetStockByID(ctx, product_id)
 	if err != nil {
 		if errors.Is(err, repository.ErrStockNotFound) {
-			p.log.Error("stock not found", slog.Int("product_id", product_id), slog.String("seller_id", seller_id))
+			p.log.Error("stock not found", slog.Int("product_id", product_id))
 			return -1, fmt.Errorf("%s: %w", op, ErrStockNotFound)
 		}
 		return -1, fmt.Errorf("%s: %w", op, err)
