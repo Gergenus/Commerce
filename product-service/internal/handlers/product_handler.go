@@ -7,11 +7,13 @@ import (
 
 	"github.com/Gergenus/commerce/product-service/internal/models"
 	"github.com/Gergenus/commerce/product-service/internal/service"
+	"github.com/Gergenus/commerce/product-service/proto"
 	"github.com/labstack/echo/v4"
 )
 
 type ProductHandler struct {
 	service service.ServiceInterface
+	proto.UnimplementedAvailablilityServiceServer
 }
 
 func NewProductHandler(service service.ServiceInterface) ProductHandler {

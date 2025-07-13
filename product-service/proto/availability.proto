@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package= "github.com/Gergenus/commerce/product-service/proto";
+
+package proto;
+
+service availablilityService {
+  rpc isAvailable(availablilityRequest) returns (availablilityResponse) {}
+}
+
+message availablilityRequest {
+  string product_id = 1;
+  int64 stock = 2;
+}
+
+message availablilityResponse {
+  bool availablility = 1;
+}
