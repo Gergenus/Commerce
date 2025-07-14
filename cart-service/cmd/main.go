@@ -41,6 +41,8 @@ func main() {
 	group := e.Group("/api/v1/cart", cartMiddleware.CartMiddleware)
 	{
 		group.POST("/add", hnd.AddToCart)
+		group.POST("/delete", hnd.DeleteFromCart)
+		group.GET("/", hnd.GetCart)
 	}
 
 	e.Start(":" + cfg.HTTPPort)

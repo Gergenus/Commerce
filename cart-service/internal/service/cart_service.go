@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	ErrInsufficientStock = errors.New("insufficient stock")
+	ErrInsufficientStock  = errors.New("insufficient stock")
+	ErrAlredyAdded        = errors.New("product already added")
+	ErrNoCartProductFound = errors.New("no cart product found")
 )
 
 type CartService struct {
@@ -39,6 +41,10 @@ func (c CartService) AddToCart(ctx context.Context, UUID, productID string, stoc
 	}
 	err = c.repo.AddToCart(ctx, UUID, productID, stock)
 	if err != nil {
+		if errors.Is(err, repository.ErrAlredyAdded) {
+			log.Warn("product alredy added", slog.String("productID", productID))
+			return ErrAlredyAdded
+		}
 		log.Error("adding to the cart error", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -52,6 +58,10 @@ func (c CartService) DeleteFromCart(ctx context.Context, UUID, productID string)
 	log.Info("deleting from the cart", slog.String("UUID", UUID))
 	err := c.repo.DeleteFromCart(ctx, UUID, productID)
 	if err != nil {
+		if errors.Is(err, repository.ErrNoCartProductFound) {
+			log.Warn("no cart product found", slog.String("productID", productID))
+			return ErrNoCartProductFound
+		}
 		log.Error("deleting product from the cart error", slog.String("UUID", UUID))
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -69,4 +79,16 @@ func (c CartService) UpdateStock(ctx context.Context, UUID, productID string, st
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	return nil
+}
+
+func (c CartService) GetCart(ctx context.Context, UUID string) (map[string]string, error) {
+	const op = "service.GetCart"
+	log := c.log.With(slog.String("op", op))
+	log.Info("getting the cart", slog.String("UUID", UUID))
+	cart, err := c.repo.GetCart(ctx, UUID)
+	if err != nil {
+		log.Error("getting cart error", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return cart, nil
 }

@@ -30,7 +30,8 @@ func (p CartMiddleware) CartMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				"error": "No auth token",
 			})
 		}
-		role, uuid, err := p.jwtProduct.ParseToken(cookie.Value)
+
+		role, uuid, ver, err := p.jwtProduct.ParseToken(cookie.Value)
 		if err != nil {
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 				"error": "Invalid token",
@@ -43,7 +44,12 @@ func (p CartMiddleware) CartMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 		}
 
-		c.Set("role", role)
+		if !ver {
+			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+				"error": "unverified user",
+			})
+		}
+
 		c.Set("uuid", uuid)
 		return next(c)
 	}

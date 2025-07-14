@@ -23,11 +23,11 @@ func NewCartJWTpkg(JWTSecret string) CartJWTpkg {
 }
 
 type CartJWTInterface interface {
-	// returns role and uuid
-	ParseToken(token string) (string, string, error)
+	// returns role and uuid, verification
+	ParseToken(token string) (string, string, bool, error)
 }
 
-func (c CartJWTpkg) ParseToken(token string) (string, string, error) {
+func (c CartJWTpkg) ParseToken(token string) (string, string, bool, error) {
 	keyfunc := func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
@@ -38,26 +38,31 @@ func (c CartJWTpkg) ParseToken(token string) (string, string, error) {
 
 	tkn, err := jwt.Parse(token, keyfunc)
 	if err != nil {
-		return "", "", err
+		return "", "", false, err
 	}
 
 	claims, ok := tkn.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", "", ErrClaimsFailed
+		return "", "", false, ErrClaimsFailed
 	}
 
 	if claims["exp"].(float64) < float64(time.Now().Unix()) {
-		return "", "", ErrTokenExpired
+		return "", "", false, ErrTokenExpired
 	}
 
 	role, ok := claims["role"].(string)
 	if !ok {
-		return "", "", ErrConversion
+		return "", "", false, ErrConversion
 	}
 	uuid, ok := claims["uuid"].(string)
 	if !ok {
-		return "", "", ErrConversion
+		return "", "", false, ErrConversion
 	}
 
-	return role, uuid, nil
+	ver, ok := claims["verified"].(bool)
+	if !ok {
+		return "", "", false, ErrConversion
+	}
+
+	return role, uuid, ver, nil
 }

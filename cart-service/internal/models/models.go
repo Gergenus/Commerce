@@ -1,6 +1,10 @@
 package models
 
 type AddCartRequest struct {
-	ProductId string `json:"product_id"`
-	Stock     int    `json:"stock"`
+	ProductId int `json:"product_id"`
+	Stock     int `json:"stock"`
+}
+
+type DeleteFromCartRequest struct {
+	ProductId int `json:"product_id"`
 }
