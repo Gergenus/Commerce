@@ -38,7 +38,7 @@ func main() {
 		group.POST("/login", handler.Login)
 		group.POST("/refresh", handler.Refresh)
 		group.POST("/logout", handler.Logout)
-		group.POST("/verification", handler.Verification) // автоматика по ссылке из почты
+		group.GET("/verification", handler.Verification) // автоматика по ссылке из почты
 		group.POST("/confirmation", handler.RegistrationConfirmation, middleWare.ConfirmationMiddleware)
 	}
 	e.Start(":" + cfg.HTTPPort)

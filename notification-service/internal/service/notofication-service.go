@@ -76,7 +76,7 @@ func (n NotificationService) sendVerificationEmail(msg *sarama.ConsumerMessage) 
 		return err
 	}
 
-	err = n.mail.SendVerificationEmail(data.Email, "profile confirmation", "verification_email", map[string]string{"VerificationLink": "http://localhost:8081/api/v1/users/auth/verification=" + token})
+	err = n.mail.SendVerificationEmail(data.Email, "profile confirmation", "verification_email", map[string]string{"VerificationLink": "http://localhost:8081/api/v1/users/auth/verification?token=" + token})
 	if err != nil {
 		log.Error("email sending error", slog.String("error", err.Error()))
 		return err

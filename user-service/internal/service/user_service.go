@@ -80,7 +80,7 @@ func (u *UserService) Login(ctx context.Context, email, password, userAgent, ip 
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 	if !hash.CheckPassword(user.Password, password) {
-		u.log.Info("passwords mismatch")
+		u.log.Warn("passwords mismatch")
 		return "", "", fmt.Errorf("%s: %w", op, ErrPasswordMismatch)
 	}
 	AccessToken, err := u.jwtToken.GenerateAccessToken(*user)

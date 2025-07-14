@@ -44,7 +44,6 @@ func main() {
 	}()
 	e := echo.New()
 
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	group := e.Group("/api/v1/products")
 	{

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/Gergenus/commerce/product-service/internal/service"
 	"github.com/Gergenus/commerce/product-service/proto"
 )
 
@@ -23,6 +24,9 @@ func (p *ProductHandler) IsAvailable(ctx context.Context, in *proto.Availablilit
 	}
 	stock, err := p.service.GetStockByID(ctx, productId)
 	if err != nil {
+		if errors.Is(err, service.ErrStockNotFound) {
+			return &proto.AvailablilityResponse{Availablility: false}, nil
+		}
 		return &proto.AvailablilityResponse{}, ErrInternal
 
 	}

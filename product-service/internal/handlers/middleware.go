@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/Gergenus/commerce/product-service/pkg/jwtpkg"
@@ -22,7 +21,6 @@ func (p ProductMiddleware) Auth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cookie, err := c.Cookie("AccessToken")
 		if err != nil {
-			log.Println(err)
 			return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 				"error": "getting token error",
 			})

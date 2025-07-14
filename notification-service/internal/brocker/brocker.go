@@ -20,7 +20,7 @@ func NewKafkaBrocker(EventConsumer sarama.Consumer) KafkaBrocker {
 
 func (k KafkaBrocker) RecieveMessages(topic string) (sarama.PartitionConsumer, error) {
 	const op = "brocker.RecieveMessages"
-	consumer, err := k.EventConsumer.ConsumePartition(topic, 0, sarama.OffsetOldest)
+	consumer, err := k.EventConsumer.ConsumePartition(topic, 0, sarama.OffsetNewest)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

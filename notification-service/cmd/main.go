@@ -21,6 +21,9 @@ func main() {
 	kafkaBrocker := brocker.NewKafkaBrocker(kafkaConsumer)
 	servce := service.NewNotificationService(log, &mail, kafkaBrocker, jwtPkg)
 
-	servce.ListenToTopic("mail")
+	if err := servce.ListenToTopic("mail"); err != nil {
+		panic(err)
+	}
+
 	log.Info("stopping the project")
 }
