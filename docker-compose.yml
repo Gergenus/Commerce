@@ -30,6 +30,21 @@ services:
       timeout: 5s
       retries: 5
 
+  order_db:
+    image: postgres
+    container_name: order_db
+    ports:
+      - 5435:5432
+    volumes: 
+      - order_db_data:/var/lib/postgresql/data
+    env_file:
+      - ./order-service/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   user_kafka:
     image: apache/kafka
     container_name: user_kafka

@@ -24,11 +24,11 @@ func InitConfig() Config {
 	if err != nil {
 		panic(err)
 	}
-	AccessTTL, err := time.ParseDuration(os.Getenv("AccessTTL"))
+	AccessTTL, err := time.ParseDuration(os.Getenv("ACCESS_TTL"))
 	if err != nil {
 		panic(err)
 	}
-	RefreshTTl, err := time.ParseDuration(os.Getenv("RefreshTTl"))
+	RefreshTTl, err := time.ParseDuration(os.Getenv("REFRESH_TTL"))
 	if err != nil {
 		panic(err)
 	}

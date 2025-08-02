@@ -16,6 +16,7 @@ var (
 	ErrStockNotFound              = errors.New("stock not found")
 	ErrProductNotFound            = errors.New("product not found")
 	ErrNoSuchCategoryExists       = errors.New("no such category exists")
+	ErrCategoryAlreadyExists      = errors.New("category already exists")
 )
 
 type ProductService struct {
@@ -35,8 +36,8 @@ func (p *ProductService) AddCategory(ctx context.Context, category string) (int,
 	const op = "service.AddCategory"
 	id, err := p.repo.AddCategory(ctx, category)
 	if err != nil {
-		p.log.Error("adding category error", slog.String("category", category))
-		return -1, fmt.Errorf("%s: %w", op, err)
+		p.log.Error("adding category error", slog.String("category", category), slog.String("error", err.Error()))
+		return -1, fmt.Errorf("%s: %w", op, ErrCategoryAlreadyExists)
 	}
 	p.log.Info("the category was added", slog.String("category", category))
 	return id, nil

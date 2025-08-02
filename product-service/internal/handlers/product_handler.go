@@ -34,6 +34,11 @@ func (p *ProductHandler) AddCategory(c echo.Context) error {
 
 	id, err := p.service.AddCategory(c.Request().Context(), category.Category)
 	if err != nil {
+		if errors.Is(err, service.ErrCategoryAlreadyExists) {
+			return c.JSON(http.StatusBadRequest, map[string]any{
+				"error": "category already exists",
+			})
+		}
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"error": "Internal error",
 		})

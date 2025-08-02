@@ -23,13 +23,13 @@ func InitConfig() Config {
 	if err != nil {
 		panic(err)
 	}
-	TokenTTL, err := time.ParseDuration(os.Getenv("TokenTTL"))
+	TokenTTL, err := time.ParseDuration(os.Getenv("TOKEN_TTL"))
 	if err != nil {
 		panic(err)
 	}
 
 	return Config{
-		LogLevel:          os.Getenv("LogLevel"),
+		LogLevel:          os.Getenv("LOG_LEVEL"),
 		JWTMailSecret:     os.Getenv("JWT_MAIL_SECRET"),
 		TokenTTL:          TokenTTL,
 		FromEmail:         os.Getenv("FROM_EMAIL"),
