@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.20.3
-// source: proto/availability.proto
+// source: proto/order.proto
 
 package proto
 
@@ -19,108 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AvailablilityService_IsAvailable_FullMethodName = "/proto.availablilityService/isAvailable"
-)
-
-// AvailablilityServiceClient is the client API for AvailablilityService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AvailablilityServiceClient interface {
-	IsAvailable(ctx context.Context, in *AvailablilityRequest, opts ...grpc.CallOption) (*AvailablilityResponse, error)
-}
-
-type availablilityServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewAvailablilityServiceClient(cc grpc.ClientConnInterface) AvailablilityServiceClient {
-	return &availablilityServiceClient{cc}
-}
-
-func (c *availablilityServiceClient) IsAvailable(ctx context.Context, in *AvailablilityRequest, opts ...grpc.CallOption) (*AvailablilityResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AvailablilityResponse)
-	err := c.cc.Invoke(ctx, AvailablilityService_IsAvailable_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// AvailablilityServiceServer is the server API for AvailablilityService service.
-// All implementations must embed UnimplementedAvailablilityServiceServer
-// for forward compatibility.
-type AvailablilityServiceServer interface {
-	IsAvailable(context.Context, *AvailablilityRequest) (*AvailablilityResponse, error)
-	mustEmbedUnimplementedAvailablilityServiceServer()
-}
-
-// UnimplementedAvailablilityServiceServer must be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
-type UnimplementedAvailablilityServiceServer struct{}
-
-func (UnimplementedAvailablilityServiceServer) IsAvailable(context.Context, *AvailablilityRequest) (*AvailablilityResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsAvailable not implemented")
-}
-func (UnimplementedAvailablilityServiceServer) mustEmbedUnimplementedAvailablilityServiceServer() {}
-func (UnimplementedAvailablilityServiceServer) testEmbeddedByValue()                              {}
-
-// UnsafeAvailablilityServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AvailablilityServiceServer will
-// result in compilation errors.
-type UnsafeAvailablilityServiceServer interface {
-	mustEmbedUnimplementedAvailablilityServiceServer()
-}
-
-func RegisterAvailablilityServiceServer(s grpc.ServiceRegistrar, srv AvailablilityServiceServer) {
-	// If the following call pancis, it indicates UnimplementedAvailablilityServiceServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
-	s.RegisterService(&AvailablilityService_ServiceDesc, srv)
-}
-
-func _AvailablilityService_IsAvailable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AvailablilityRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AvailablilityServiceServer).IsAvailable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AvailablilityService_IsAvailable_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AvailablilityServiceServer).IsAvailable(ctx, req.(*AvailablilityRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// AvailablilityService_ServiceDesc is the grpc.ServiceDesc for AvailablilityService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var AvailablilityService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.availablilityService",
-	HandlerType: (*AvailablilityServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "isAvailable",
-			Handler:    _AvailablilityService_IsAvailable_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/availability.proto",
-}
-
-const (
+	OrderService_GetCart_FullMethodName      = "/proto.OrderService/GetCart"
 	OrderService_ReserveOrder_FullMethodName = "/proto.OrderService/ReserveOrder"
 )
 
@@ -128,6 +27,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrderServiceClient interface {
+	GetCart(ctx context.Context, in *GetCartRequest, opts ...grpc.CallOption) (*GetCartResponse, error)
 	ReserveOrder(ctx context.Context, in *ReserveOrderRequest, opts ...grpc.CallOption) (*ReserveOrderResponse, error)
 }
 
@@ -137,6 +37,16 @@ type orderServiceClient struct {
 
 func NewOrderServiceClient(cc grpc.ClientConnInterface) OrderServiceClient {
 	return &orderServiceClient{cc}
+}
+
+func (c *orderServiceClient) GetCart(ctx context.Context, in *GetCartRequest, opts ...grpc.CallOption) (*GetCartResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetCartResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetCart_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *orderServiceClient) ReserveOrder(ctx context.Context, in *ReserveOrderRequest, opts ...grpc.CallOption) (*ReserveOrderResponse, error) {
@@ -153,6 +63,7 @@ func (c *orderServiceClient) ReserveOrder(ctx context.Context, in *ReserveOrderR
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
 type OrderServiceServer interface {
+	GetCart(context.Context, *GetCartRequest) (*GetCartResponse, error)
 	ReserveOrder(context.Context, *ReserveOrderRequest) (*ReserveOrderResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
@@ -164,6 +75,9 @@ type OrderServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedOrderServiceServer struct{}
 
+func (UnimplementedOrderServiceServer) GetCart(context.Context, *GetCartRequest) (*GetCartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCart not implemented")
+}
 func (UnimplementedOrderServiceServer) ReserveOrder(context.Context, *ReserveOrderRequest) (*ReserveOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReserveOrder not implemented")
 }
@@ -186,6 +100,24 @@ func RegisterOrderServiceServer(s grpc.ServiceRegistrar, srv OrderServiceServer)
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&OrderService_ServiceDesc, srv)
+}
+
+func _OrderService_GetCart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetCart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetCart_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetCart(ctx, req.(*GetCartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _OrderService_ReserveOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -214,10 +146,14 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*OrderServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "GetCart",
+			Handler:    _OrderService_GetCart_Handler,
+		},
+		{
 			MethodName: "ReserveOrder",
 			Handler:    _OrderService_ReserveOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/availability.proto",
+	Metadata: "proto/order.proto",
 }

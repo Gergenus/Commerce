@@ -29,12 +29,13 @@ func main() {
 	jwtPkg := jwtpkg.NewJWTpkg(cfg.JWTSecret, log)
 	middleWare := handlers.NewProductMiddleware(jwtPkg)
 
-	lis, err := net.Listen("tcp", cfg.GRPCAddress)
+	lis, err := net.Listen("tcp", cfg.GRPCProductServerAddress)
 	if err != nil {
 		panic(err)
 	}
 	s := grpc.NewServer()
 	proto.RegisterAvailablilityServiceServer(s, &hand)
+	proto.RegisterOrderServiceServer(s, &hand)
 	go func() {
 		log.Info("starting gRPC server")
 		if err := s.Serve(lis); err != nil {

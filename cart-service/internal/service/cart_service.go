@@ -81,7 +81,7 @@ func (c CartService) UpdateStock(ctx context.Context, UUID, productID string, st
 	return nil
 }
 
-func (c CartService) GetCart(ctx context.Context, UUID string) (map[string]string, error) {
+func (c CartService) Cart(ctx context.Context, UUID string) (map[string]string, error) {
 	const op = "service.GetCart"
 	log := c.log.With(slog.String("op", op))
 	log.Info("getting the cart", slog.String("UUID", UUID))

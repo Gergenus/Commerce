@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gergenus/commerce/product-service/internal/models"
 	"github.com/Gergenus/commerce/product-service/internal/repository"
+	"github.com/google/uuid"
 )
 
 var (
@@ -106,4 +107,31 @@ func (p *ProductService) GetProductByID(ctx context.Context, id int) (models.Pro
 		return models.Product{}, fmt.Errorf("%s: %w", op, err)
 	}
 	return product, nil
+}
+
+func (p *ProductService) ReserveProducts(ctx context.Context, products []models.ProductsToReserve) ([]models.ProductsToReserve, error) {
+	const op = "service.ReserveOrderReserveOrder"
+	log := p.log.With(slog.String("op", op))
+	log.Info("reserving products")
+	err := p.repo.ReserveProducts(ctx, products)
+	if err != nil {
+		log.Error("failed to reserve products")
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	for index := range products {
+		product, err := p.repo.GetProductByID(ctx, products[index].ID)
+		if err != nil {
+			log.Error("failed to get seller_id")
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		sellerID, err := uuid.Parse(product.SellerID)
+		if err != nil {
+			log.Error("failed to parse uuid", slog.String("error", err.Error()))
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		products[index].SellerID = sellerID
+		products[index].Price = product.Price
+	}
+	log.Info("succesfully reserved products")
+	return products, nil
 }

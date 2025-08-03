@@ -9,14 +9,15 @@ import (
 )
 
 type Config struct {
-	LogLevel      string
-	JWTSecret     string
-	RedisAddress  string
-	GRPCAddress   string
-	RedisDB       int
-	RedisPassword string
-	CartTTL       time.Duration
-	HTTPPort      string
+	LogLevel                  string
+	JWTSecret                 string
+	RedisAddress              string
+	GRPCCartServerAddress     string
+	GRPCProductServiceAddress string
+	RedisDB                   int
+	RedisPassword             string
+	CartTTL                   time.Duration
+	HTTPPort                  string
 }
 
 func InitConfig() Config {
@@ -33,13 +34,14 @@ func InitConfig() Config {
 		panic(err)
 	}
 	return Config{
-		LogLevel:      os.Getenv("LOG_LEVEL"),
-		JWTSecret:     os.Getenv("JWT_SECRET"),
-		RedisAddress:  os.Getenv("REDIS_ADDRESS"),
-		GRPCAddress:   os.Getenv("GRPC_ADDRESS"),
-		RedisDB:       redisdb,
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		CartTTL:       cartTTL,
-		HTTPPort:      os.Getenv("HTTP_PORT"),
+		LogLevel:                  os.Getenv("LOG_LEVEL"),
+		JWTSecret:                 os.Getenv("JWT_SECRET"),
+		RedisAddress:              os.Getenv("REDIS_ADDRESS"),
+		GRPCCartServerAddress:     os.Getenv("GRPC_CART_SERVER_ADDRESS"),
+		GRPCProductServiceAddress: os.Getenv("GRPC_PRODUCT_SERVICE_ADDRESS"),
+		RedisDB:                   redisdb,
+		RedisPassword:             os.Getenv("REDIS_PASSWORD"),
+		CartTTL:                   cartTTL,
+		HTTPPort:                  os.Getenv("HTTP_PORT"),
 	}
 }

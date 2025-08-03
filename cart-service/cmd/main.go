@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net"
+
 	"github.com/Gergenus/commerce/cart-service/internal/config"
 	"github.com/Gergenus/commerce/cart-service/internal/handlers"
 	"github.com/Gergenus/commerce/cart-service/internal/repository"
@@ -22,7 +24,7 @@ func main() {
 	jwtPkg := jwtpkg.NewCartJWTpkg(cfg.JWTSecret)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	conn, err := grpc.NewClient(cfg.GRPCAddress, opts...)
+	conn, err := grpc.NewClient(cfg.GRPCProductServiceAddress, opts...)
 	if err != nil {
 		panic(err)
 	}
@@ -36,13 +38,27 @@ func main() {
 	srv := service.NewCartService(log, repo, client)
 	hnd := handlers.NewCartHandler(srv)
 
+	lis, err := net.Listen("tcp", cfg.GRPCCartServerAddress)
+	if err != nil {
+		panic(err)
+	}
+	s := grpc.NewServer()
+	proto.RegisterOrderServiceServer(s, hnd)
+	go func() {
+		log.Info("starting gRPC server")
+		if err := s.Serve(lis); err != nil {
+			panic(err)
+		}
+
+	}()
+
 	e := echo.New()
 	e.Use(middleware.Recover())
 	group := e.Group("/api/v1/cart", cartMiddleware.CartMiddleware)
 	{
 		group.POST("/add", hnd.AddToCart)
 		group.POST("/delete", hnd.DeleteFromCart)
-		group.GET("/", hnd.GetCart)
+		group.GET("/", hnd.Cart)
 	}
 
 	e.Start(":" + cfg.HTTPPort)

@@ -12,4 +12,5 @@ type ServiceInterface interface {
 	GetStockByID(ctx context.Context, product_id int) (int, error)
 	AddStockByID(ctx context.Context, seller_id string, product_id, number int) (int, error)
 	GetProductByID(ctx context.Context, id int) (models.Product, error)
+	ReserveProducts(ctx context.Context, products []models.ProductsToReserve) ([]models.ProductsToReserve, error)
 }

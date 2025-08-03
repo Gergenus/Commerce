@@ -250,3 +250,24 @@ func (p *PostgresRepository) GetProductsBySellerID(ctx context.Context, seller_i
 	}
 	return products, nil
 }
+
+func (p *PostgresRepository) ReserveProducts(ctx context.Context, products []models.ProductsToReserve) error {
+	const op = "repository.ReserveProduct"
+	tx, err := p.db.DB.Begin(ctx)
+	defer tx.Rollback(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	for _, product := range products {
+		_, err := tx.Exec(ctx, "UPDATE stock SET stock= stock - $1, reserved_stock = reserved_stock + $1 WHERE product_id=$2", product.Stock, product.ID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}

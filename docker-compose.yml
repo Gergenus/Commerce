@@ -66,3 +66,4 @@ volumes:
   product_db_data:
   user_db_data:
   cart_redis_db:
+  order_db_data:

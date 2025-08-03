@@ -14,6 +14,7 @@ import (
 type ProductHandler struct {
 	service service.ServiceInterface
 	proto.UnimplementedAvailablilityServiceServer
+	proto.UnimplementedOrderServiceServer
 }
 
 func NewProductHandler(service service.ServiceInterface) ProductHandler {

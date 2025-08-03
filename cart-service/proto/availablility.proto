@@ -8,6 +8,10 @@ service availablilityService {
   rpc isAvailable(availablilityRequest) returns (availablilityResponse) {}
 }
 
+service OrderService {
+   rpc GetCart(getCartRequest) returns (getCartResponse) {}
+}
+
 message availablilityRequest {
   string product_id = 1;
   int64 stock = 2;
@@ -15,4 +19,18 @@ message availablilityRequest {
 
 message availablilityResponse {
   bool availablility = 1;
+}
+
+message getCartRequest {
+  string user_id = 1;
+}
+
+message getCartResponse {
+  bool availablility = 1;
+  repeated orderProduct orderProducts = 2;
+}
+
+message orderProduct {
+  int64 product_id = 1;
+  int64 stock = 2;
 }

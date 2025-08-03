@@ -7,11 +7,11 @@ import (
 )
 
 type Config struct {
-	PostgresURL string
-	LogLevel    string
-	HTTPPort    string
-	JWTSecret   string
-	GRPCAddress string
+	PostgresURL              string
+	LogLevel                 string
+	HTTPPort                 string
+	JWTSecret                string
+	GRPCProductServerAddress string
 }
 
 func InitConfig() Config {
@@ -20,10 +20,10 @@ func InitConfig() Config {
 		panic(err)
 	}
 	return Config{
-		PostgresURL: os.Getenv("PostgresURL"),
-		LogLevel:    os.Getenv("LogLevel"),
-		HTTPPort:    os.Getenv("HTTPPort"),
-		JWTSecret:   os.Getenv("JWTSecret"),
-		GRPCAddress: os.Getenv("GRPC_ADDRESS"),
+		PostgresURL:              os.Getenv("PostgresURL"),
+		LogLevel:                 os.Getenv("LogLevel"),
+		HTTPPort:                 os.Getenv("HTTPPort"),
+		JWTSecret:                os.Getenv("JWTSecret"),
+		GRPCProductServerAddress: os.Getenv("GRPC_PRODUCT_SERVER_ADDRESS"),
 	}
 }

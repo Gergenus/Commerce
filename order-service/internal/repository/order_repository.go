@@ -27,7 +27,7 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, userId uuid.UUID, pri
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
-	err = tx.QueryRow(ctx, "INSET INTO orders (customer_id, status, price) VALUES($1, $2, $3) RETURNING id", userId.String(), PendingStatus, price).Scan(&id)
+	err = tx.QueryRow(ctx, "INSERT INTO orders (customer_id, status, price) VALUES($1, $2, $3) RETURNING id", userId.String(), PendingStatus, price).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -41,7 +41,7 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, userId uuid.UUID, pri
 func (o *OrderRepository) FillOrder(ctx context.Context, orderId int, products []models.OrderProduct) error {
 	const op = "repository.FillOrder"
 	for _, product := range products {
-		_, err := o.db.DB.Exec(ctx, "INSERT INTO order_goods (order_id, product_id, seller_id, quantity) VALUES($1, $2, $3, $4)", orderId, product.ID, product.SellerID, product.Quantity)
+		_, err := o.db.DB.Exec(ctx, "INSERT INTO order_goods (order_id, product_id, seller_id, quantity) VALUES($1, $2, $3, $4)", orderId, product.ID, product.SellerID.String(), product.Stock)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}

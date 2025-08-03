@@ -20,4 +20,5 @@ type RepositoryInterface interface {
 	GetProductsByCategory(ctx context.Context, category string) ([]models.Product, error)
 	GetProductsBySellerID(ctx context.Context, seller_id string) ([]models.Product, error)
 	CheckProductExists(ctx context.Context, seller_id string, product_name string) (bool, error)
+	ReserveProducts(ctx context.Context, products []models.ProductsToReserve) error
 }

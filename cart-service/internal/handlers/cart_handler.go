@@ -7,11 +7,13 @@ import (
 
 	"github.com/Gergenus/commerce/cart-service/internal/models"
 	"github.com/Gergenus/commerce/cart-service/internal/service"
+	"github.com/Gergenus/commerce/cart-service/proto"
 	"github.com/labstack/echo/v4"
 )
 
 type CartHandler struct {
 	srv service.CartServiceInterface
+	proto.UnimplementedOrderServiceServer
 }
 
 func NewCartHandler(srv service.CartServiceInterface) *CartHandler {
@@ -89,7 +91,7 @@ func (ch *CartHandler) DeleteFromCart(c echo.Context) error {
 	})
 }
 
-func (ch *CartHandler) GetCart(c echo.Context) error {
+func (ch *CartHandler) Cart(c echo.Context) error {
 	UUID := c.Get("uuid")
 	UUIDString, ok := UUID.(string)
 	if !ok {
@@ -97,7 +99,7 @@ func (ch *CartHandler) GetCart(c echo.Context) error {
 			"error": "internal error",
 		})
 	}
-	carts, err := ch.srv.GetCart(c.Request().Context(), UUIDString)
+	carts, err := ch.srv.Cart(c.Request().Context(), UUIDString)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": "internal server",
