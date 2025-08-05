@@ -9,6 +9,7 @@ import (
 	"github.com/Gergenus/commerce/product-service/internal/repository"
 	"github.com/Gergenus/commerce/product-service/internal/service"
 	dbpkg "github.com/Gergenus/commerce/product-service/pkg/db"
+	"github.com/Gergenus/commerce/product-service/pkg/elastic"
 	"github.com/Gergenus/commerce/product-service/pkg/jwtpkg"
 	"github.com/Gergenus/commerce/product-service/pkg/logger"
 	"github.com/Gergenus/commerce/product-service/proto"
@@ -24,10 +25,22 @@ func main() {
 	log := logger.SetupLogger(cfg.LogLevel)
 
 	repo := repository.NewPostgresRepository(db)
-	serv := service.NewProductService(log, &repo)
+	eClient := elastic.NewElasticClient([]string{cfg.ElasticAddress}, cfg.ElasticUser, cfg.ElasticPassword, cfg.ElasticCrt, log, &repo)
+	serv := service.NewProductService(log, &repo, &eClient)
 	hand := handlers.NewProductHandler(&serv)
 	jwtPkg := jwtpkg.NewJWTpkg(cfg.JWTSecret, log)
 	middleWare := handlers.NewProductMiddleware(jwtPkg)
+
+	// use faktory
+
+	isCreated := eClient.InitIndexation(context.Background())
+	if isCreated {
+		err := eClient.IndexAllProducts(context.Background())
+		if err != nil {
+			panic(err)
+		}
+
+	}
 
 	lis, err := net.Listen("tcp", cfg.GRPCProductServerAddress)
 	if err != nil {
@@ -53,7 +66,7 @@ func main() {
 		group.GET("/", hand.GetProductByID)                          // get product by id
 		group.POST("/stock/add", hand.AddStockByID, middleWare.Auth) // add stock by id
 		group.GET("/stock", hand.GetStockByID, middleWare.Auth)      // get stock by id
-
+		group.GET("", hand.Products)
 	}
 
 	e.Start(":" + cfg.HTTPPort)

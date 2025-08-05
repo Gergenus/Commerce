@@ -8,27 +8,24 @@ import (
 	"github.com/Gergenus/commerce/product-service/internal/models"
 	"github.com/Gergenus/commerce/product-service/internal/service"
 	"github.com/Gergenus/commerce/product-service/proto"
-)
-
-var (
-	ErrInvalidPayload = errors.New("invalid payload")
-	ErrInternal       = errors.New("internal error")
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (p *ProductHandler) IsAvailable(ctx context.Context, in *proto.AvailablilityRequest) (*proto.AvailablilityResponse, error) {
 	if in.GetProductId() == "" || in.GetStock() <= 0 {
-		return &proto.AvailablilityResponse{}, ErrInvalidPayload
+		return &proto.AvailablilityResponse{}, status.Error(codes.InvalidArgument, "invalid argument")
 	}
 	productId, err := strconv.Atoi(in.GetProductId())
 	if err != nil {
-		return &proto.AvailablilityResponse{}, ErrInvalidPayload
+		return &proto.AvailablilityResponse{}, status.Error(codes.InvalidArgument, "invalid argument")
 	}
 	stock, err := p.service.GetStockByID(ctx, productId)
 	if err != nil {
 		if errors.Is(err, service.ErrStockNotFound) {
 			return &proto.AvailablilityResponse{Availablility: false}, nil
 		}
-		return &proto.AvailablilityResponse{}, ErrInternal
+		return &proto.AvailablilityResponse{}, status.Error(codes.Internal, "internal error")
 
 	}
 	if stock < int(in.GetStock()) {
@@ -44,7 +41,7 @@ func (p *ProductHandler) ReserveOrder(ctx context.Context, in *proto.ReserveOrde
 	}
 	reservedProducts, err := p.service.ReserveProducts(ctx, products)
 	if err != nil {
-		return &proto.ReserveOrderResponse{IsReserved: false}, ErrInternal
+		return &proto.ReserveOrderResponse{IsReserved: false}, status.Error(codes.Internal, "internal error")
 	}
 	var fullPrice float64
 	responseProducts := []*proto.ProductSeller{}

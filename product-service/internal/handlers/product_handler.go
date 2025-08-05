@@ -163,3 +163,31 @@ func (p *ProductHandler) GetProductByID(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, product)
 }
+
+func (p *ProductHandler) Products(c echo.Context) error {
+	query := c.QueryParam("search_query")
+	if query == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "bad request",
+		})
+	}
+	page := c.QueryParam("page")
+	if page == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "bad request",
+		})
+	}
+	pageSize := c.QueryParam("page_size")
+	if pageSize == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "bad request",
+		})
+	}
+	products, err := p.service.Products(c.Request().Context(), query, page, pageSize)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "internal error",
+		})
+	}
+	return c.JSON(http.StatusOK, products)
+}

@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
 
 	"github.com/Gergenus/commerce/product-service/internal/models"
 	"github.com/Gergenus/commerce/product-service/internal/repository"
+	"github.com/Gergenus/commerce/product-service/pkg/elastic"
 	"github.com/google/uuid"
 )
 
@@ -21,14 +25,16 @@ var (
 )
 
 type ProductService struct {
-	log  *slog.Logger
-	repo repository.RepositoryInterface
+	log     *slog.Logger
+	repo    repository.RepositoryInterface
+	eClient *elastic.ElasticClient
 }
 
-func NewProductService(log *slog.Logger, repo repository.RepositoryInterface) ProductService {
+func NewProductService(log *slog.Logger, repo repository.RepositoryInterface, eClient *elastic.ElasticClient) ProductService {
 	return ProductService{
-		log:  log,
-		repo: repo,
+		log:     log,
+		repo:    repo,
+		eClient: eClient,
 	}
 }
 
@@ -65,6 +71,12 @@ func (p *ProductService) CreateProduct(ctx context.Context, product models.Produ
 			return -1, fmt.Errorf("%s: %w", op, ErrNoSuchCategoryExists)
 		}
 		return -1, fmt.Errorf("%s: %w", op, ErrFailedCreateProduct)
+	}
+	product.ID = id
+	err = p.eClient.IndexProduct(ctx, product)
+	if err != nil {
+		p.log.Error("indexing product error", slog.String("error", err.Error()))
+		return -1, fmt.Errorf("%s: %w", op, err)
 	}
 	return id, nil
 }
@@ -134,4 +146,76 @@ func (p *ProductService) ReserveProducts(ctx context.Context, products []models.
 	}
 	log.Info("succesfully reserved products")
 	return products, nil
+}
+
+func (p *ProductService) Products(ctx context.Context, name string, offset, limit string) ([]models.Product, error) {
+	const op = "service.Products"
+	log := p.log.With(slog.String("op", op))
+	log.Info("searching for products")
+	from, err := strconv.Atoi(offset)
+	if err != nil {
+		log.Error("failed to encode query", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	q := map[string]interface{}{
+		"query": map[string]interface{}{
+			"multi_match": map[string]interface{}{
+				"query":     name,
+				"fields":    []string{"product_name"},
+				"fuzziness": "AUTO",
+				"operator":  "or",
+			},
+		},
+		"size": limit,
+		"from": strconv.Itoa(from - 1),
+		"sort": []string{},
+	}
+
+	var buf bytes.Buffer
+
+	err = json.NewEncoder(&buf).Encode(q)
+	if err != nil {
+		log.Error("failed to encode query", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	resp, err := p.eClient.ElClient.Search(
+		p.eClient.ElClient.Search.WithIndex(elastic.ProductIndex),
+		p.eClient.ElClient.Search.WithBody(&buf),
+	)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Error("failed to search", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	if resp.IsError() {
+		log.Error("failed to search")
+	}
+	var r map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&r); err != nil {
+		log.Error("failed to decode reply")
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	response := []models.Product{}
+
+	if hits, ok := r["hits"].(map[string]interface{}); ok {
+		if wrappedHits, ok := hits["hits"].([]interface{}); ok {
+			for _, hit := range wrappedHits {
+				prod := models.Product{}
+				if hitMap, ok := hit.(map[string]interface{}); ok {
+					if data, ok := hitMap["_source"].(map[string]interface{}); ok {
+						prod.ID = int(data["id"].(float64))
+						prod.CategoryID = int(data["category_id"].(float64))
+						prod.Price = data["price"].(float64)
+						prod.ProductName = data["product_name"].(string)
+						prod.SellerID = data["seller_id"].(string)
+					}
+				}
+				response = append(response, prod)
+			}
+		}
+	}
+	return response, nil
 }

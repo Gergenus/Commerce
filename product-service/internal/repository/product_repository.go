@@ -73,6 +73,27 @@ func (p *PostgresRepository) DeleteCategoryByID(ctx context.Context, id int) err
 	return nil
 }
 
+func (p *PostgresRepository) AllProducts(ctx context.Context) ([]*models.Product, error) {
+	const op = "repository.AllProducts"
+	products := []*models.Product{}
+	row, err := p.db.DB.Query(ctx, "SELECT * FROM product_list")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	for row.Next() {
+		product := &models.Product{}
+		err = row.Scan(&product.ID, &product.ProductName, &product.Price, &product.SellerID, &product.CategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		products = append(products, product)
+	}
+	if row.Err() != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return products, nil
+}
+
 func (p *PostgresRepository) GetStockByID(ctx context.Context, product_id int) (int, error) {
 	const op = "repository.GetStockByID"
 	var stock int

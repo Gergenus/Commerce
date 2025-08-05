@@ -51,9 +51,6 @@ func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, 
 	products := cartResp.GetOrderProducts()
 	// gRPC req to product-service, it returns a slice of products with its seller_id
 	ReservedResponse, err := o.productClient.ReserveOrder(ctx, &proto.ReserveOrderRequest{OrderProducts: products})
-	if !ReservedResponse.IsReserved {
-		return 0, fmt.Errorf("%s: %w", op, ErrOrderNotReserved)
-	}
 	if err != nil {
 		log.Error("failed to call gRPC req to product-service", slog.String("error", err.Error()))
 		return 0, fmt.Errorf("%s: %w", op, err)
