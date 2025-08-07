@@ -62,8 +62,9 @@ func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, 
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	convertedProducts := convertProducts(products)
-
+	fmt.Println(products)
+	convertedProducts := convertProducts(ReservedResponse.GetProductsSeller())
+	fmt.Println(convertedProducts)
 	// create compensating transactions
 	err = o.repo.FillOrder(ctx, orderId, convertedProducts)
 	if err != nil {
@@ -76,12 +77,26 @@ func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, 
 	return orderId, nil
 }
 
-func convertProducts(oldProducts []*proto.OrderProduct) []models.OrderProduct {
+// for sellers
+func (o *OrderService) Orders(ctx context.Context, sellerId uuid.UUID) ([]models.OrderProduct, error) {
+	const op = "service.Orders"
+	log := o.log.With(slog.String("op", op))
+	log.Info("getting orders")
+	products, err := o.repo.Orders(ctx, sellerId)
+	if err != nil {
+		log.Error("failed to get seller orders", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return products, nil
+}
+
+func convertProducts(oldProducts []*proto.ProductSeller) []models.OrderProduct {
 	products := []models.OrderProduct{}
 	for _, d := range oldProducts {
 		product := models.OrderProduct{
-			ID:    int(d.GetProductId()),
-			Stock: int(d.GetStock()),
+			ID:       int(d.GetProductId()),
+			Stock:    int(d.GetStock()),
+			SellerID: uuid.MustParse(d.SellerId),
 		}
 		products = append(products, product)
 	}

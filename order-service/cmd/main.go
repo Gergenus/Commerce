@@ -1,9 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/Gergenus/commerce/order-service/internal/config"
 	"github.com/Gergenus/commerce/order-service/internal/handlers"
 	"github.com/Gergenus/commerce/order-service/internal/repository"
@@ -34,7 +31,6 @@ func main() {
 	defer cartConn.Close()
 
 	db := db.InitDB(cfg.POSTGRES_URL)
-	fmt.Println(db.DB.Ping(context.Background()))
 	cartClient := proto.NewOrderServiceClient(cartConn)
 	productClient := proto.NewOrderServiceClient(productConn)
 	repo := repository.NewOrderRepository(db)
@@ -44,9 +40,8 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Recover())
 
-	group := e.Group("/api/v1/order", handlers.OrderAuth)
-	{
-		group.POST("/", hnd.CreateOrder)
-	}
+	e.POST("/api/v1/order/", hnd.CreateOrder, handlers.OrderAuth)
+	e.GET("/api/v1/order/", hnd.Orders, handlers.SellerAuth)
+
 	e.Start(":" + cfg.HTTPPort)
 }

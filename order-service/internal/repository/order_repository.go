@@ -57,3 +57,27 @@ func (o *OrderRepository) DeleteOrder(ctx context.Context, orderId int) error {
 	}
 	return nil
 }
+
+// for seller
+func (o *OrderRepository) Orders(ctx context.Context, sellerId uuid.UUID) ([]models.OrderProduct, error) {
+	const op = "repository.Orders"
+	rows, err := o.db.DB.Query(ctx, "SELECT product_id, seller_id, quantity FROM order_goods WHERE seller_id = $1", sellerId)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	products := []models.OrderProduct{}
+	for rows.Next() {
+		var product models.OrderProduct
+		err = rows.Scan(&product.ID, &product.SellerID, &product.Stock)
+		if err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		products = append(products, product)
+	}
+	rows.Close()
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	return products, nil
+}

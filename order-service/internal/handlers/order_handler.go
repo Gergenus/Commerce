@@ -40,3 +40,15 @@ func (o OrderHandler) CreateOrder(c echo.Context) error {
 		"order_id": orderID,
 	})
 }
+
+func (o OrderHandler) Orders(c echo.Context) error {
+	uidString := c.Get("uuid").(string)
+	uid := uuid.MustParse(uidString)
+	products, err := o.srv.Orders(c.Request().Context(), uid)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": "internal error",
+		})
+	}
+	return c.JSON(http.StatusOK, products)
+}
