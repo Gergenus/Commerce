@@ -48,3 +48,12 @@ func (o *OrderRepository) FillOrder(ctx context.Context, orderId int, products [
 	}
 	return nil
 }
+
+func (o *OrderRepository) DeleteOrder(ctx context.Context, orderId int) error {
+	const op = "repository.DeleteOrder"
+	_, err := o.db.DB.Exec(ctx, "DELETE FROM orders WHERE order_id=$1", orderId)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	return nil
+}

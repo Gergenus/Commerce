@@ -61,9 +61,20 @@ services:
     env_file:
       - ./cart-service/.env
 
+  elastic:
+    image: elasticsearch:9.1.0
+    container_name: elastic
+    environment:
+      - discovery.type=single-node
+    ports:
+      - 9200:9200
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
 
 volumes:
   product_db_data:
   user_db_data:
   cart_redis_db:
   order_db_data:
+  elastic_data:

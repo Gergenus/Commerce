@@ -64,8 +64,12 @@ func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, 
 
 	convertedProducts := convertProducts(products)
 
+	// create compensating transactions
 	err = o.repo.FillOrder(ctx, orderId, convertedProducts)
 	if err != nil {
+		if err := o.repo.DeleteOrder(ctx, orderId); err != nil {
+			log.Error("failed to compensate creating order", slog.String("error", err.Error()))
+		}
 		log.Error("failed to fill order", slog.String("error", err.Error()))
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
