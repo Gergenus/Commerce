@@ -7,6 +7,7 @@ CREATE TYPE statuses AS ENUM (
 CREATE TABLE IF NOT EXISTS orders(
     id SERIAL PRIMARY KEY,
     customer_id UUID NOT NULL,
+    delivery_address VARCHAR(255) NOT NULL,
     status statuses NOT NULL,
     price DOUBLE PRECISION NOT NULL DEFAULT 0
 );

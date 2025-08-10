@@ -34,7 +34,7 @@ func NewOrderService(repo repository.OrderRepoInterface, log *slog.Logger, cartC
 }
 
 // returns orderId
-func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, error) {
+func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID, deliveryAddress string) (int, error) {
 	const op = "service.CreateOrder"
 	log := o.log.With(slog.String("op", op))
 	// gRPC req to cart service
@@ -56,15 +56,13 @@ func (o *OrderService) CreateOrder(ctx context.Context, userId uuid.UUID) (int, 
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	orderId, err := o.repo.CreateOrder(ctx, userId, float64(ReservedResponse.Price))
+	orderId, err := o.repo.CreateOrder(ctx, userId, float64(ReservedResponse.Price), deliveryAddress)
 	if err != nil {
 		log.Error("failed to create order", slog.String("error", err.Error()))
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	fmt.Println(products)
 	convertedProducts := convertProducts(ReservedResponse.GetProductsSeller())
-	fmt.Println(convertedProducts)
 	// create compensating transactions
 	err = o.repo.FillOrder(ctx, orderId, convertedProducts)
 	if err != nil {

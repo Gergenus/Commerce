@@ -8,6 +8,6 @@ import (
 )
 
 type OrderServiceInterface interface {
-	CreateOrder(ctx context.Context, userId uuid.UUID) (int, error)
+	CreateOrder(ctx context.Context, userId uuid.UUID, deliveryAddress string) (int, error)
 	Orders(ctx context.Context, sellerId uuid.UUID) ([]models.OrderProduct, error) // for sellers
 }

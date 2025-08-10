@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Gergenus/commerce/order-service/dto"
 	"github.com/Gergenus/commerce/order-service/internal/service"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -20,7 +21,16 @@ func NewOrderHandler(srv service.OrderServiceInterface) OrderHandler {
 func (o OrderHandler) CreateOrder(c echo.Context) error {
 	uid := c.Get("uuid").(string)
 
-	orderID, err := o.srv.CreateOrder(c.Request().Context(), uuid.MustParse(uid))
+	var data dto.DeliveryAddress
+
+	err := c.Bind(&data)
+	if err != nil || data.Address == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid payload",
+		})
+	}
+
+	orderID, err := o.srv.CreateOrder(c.Request().Context(), uuid.MustParse(uid), data.Address)
 	if err != nil {
 		if errors.Is(err, service.ErrOrderNotReserved) {
 			return c.JSON(http.StatusBadRequest, map[string]string{
