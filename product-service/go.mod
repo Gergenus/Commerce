@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/Gergenus/rateLimiter v0.0.0-20250810072749-bc42147f1f87 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.7.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

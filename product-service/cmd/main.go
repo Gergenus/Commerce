@@ -59,7 +59,7 @@ func main() {
 	e := echo.New()
 
 	e.Use(middleware.Recover())
-	group := e.Group("/api/v1/products")
+	group := e.Group("/api/v1/products", middleWare.RateLimiting)
 	{
 		group.POST("/", hand.AddCategory, middleWare.Auth)
 		group.POST("/create", hand.CreateProduct, middleWare.Auth)   // create product
