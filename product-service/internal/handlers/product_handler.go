@@ -50,12 +50,6 @@ func (p *ProductHandler) AddCategory(c echo.Context) error {
 }
 
 func (p *ProductHandler) CreateProduct(c echo.Context) error {
-	if c.Get("role") == "" || c.Get("role") != "seller" {
-		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
-			"error": "unsuitable role",
-		})
-	}
-
 	var product models.Product
 	err := c.Bind(&product)
 	if err != nil {
@@ -65,8 +59,8 @@ func (p *ProductHandler) CreateProduct(c echo.Context) error {
 	}
 	sellerID, ok := c.Get("uuid").(string)
 	if !ok {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"error": "claims error",
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{
+			"error": "unauthorized",
 		})
 	}
 	product.SellerID = sellerID
@@ -74,13 +68,12 @@ func (p *ProductHandler) CreateProduct(c echo.Context) error {
 	if err != nil {
 		if errors.Is(err, service.ErrMoreThanOneProductInstance) {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"error": service.ErrMoreThanOneProductInstance.Error(),
+				"error": "more than one instance of a product",
 			})
 		}
 		if errors.Is(err, service.ErrNoSuchCategoryExists) {
 			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"error":       service.ErrNoSuchCategoryExists.Error(),
-				"category_id": product.CategoryID,
+				"error": "no such category exists",
 			})
 		}
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{

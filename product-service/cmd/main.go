@@ -62,10 +62,10 @@ func main() {
 	group := e.Group("/api/v1/products", middleWare.RateLimiting)
 	{
 		group.POST("/", hand.AddCategory, middleWare.Auth)
-		group.POST("/create", hand.CreateProduct, middleWare.Auth)   // create product
-		group.GET("/", hand.GetProductByID)                          // get product by id
-		group.POST("/stock/add", hand.AddStockByID, middleWare.Auth) // add stock by id
-		group.GET("/stock", hand.GetStockByID, middleWare.Auth)      // get stock by id
+		group.POST("/create", hand.CreateProduct, middleWare.CreateProductAuth) // create product
+		group.GET("/", hand.GetProductByID)                                     // get product by id
+		group.POST("/stock/add", hand.AddStockByID, middleWare.Auth)            // add stock by id
+		group.GET("/stock", hand.GetStockByID, middleWare.Auth)                 // get stock by id
 		group.GET("", hand.Products)
 	}
 
