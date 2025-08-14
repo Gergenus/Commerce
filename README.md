@@ -1,4 +1,5 @@
 # e-commerce web platform for trading.
+The idea was inspired by [roadmap.sh](https://roadmap.sh/projects/scalable-ecommerce-platform)
 ## Structure of the project
 - user-service
 - product-service
@@ -27,3 +28,4 @@
 - Mockery
 ## Testing
 Mockery was used to create mocks on service and repository layers. product-service has essential unit tests.
+
